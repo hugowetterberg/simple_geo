@@ -1,0 +1,8 @@
+; $Id$
+name = simple_geo
+version = "5.x-0.1"
+core = "5.x"
+; description = Description of simple_geo
+; package = PackageName
+; dependencies = modulename modulename2
+
