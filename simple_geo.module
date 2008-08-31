@@ -1,3 +1,194 @@
 <?php
 // $Id$
 
+function simple_geo_perm() {
+  return array(
+    'edit own nodes area', 'edit own nodes position', 'edit all areas', 'edit all positions'
+  );
+}
+
+function simple_geo_guess_position() {
+  return '';
+}
+
+function simple_geo_form_alter($form, $form_state, $form_id) {
+  if ($form_id == 'node_type_form') {
+    $type = $form['#node_type']->type;
+    $set = array(
+      '#type' => 'fieldset',
+      '#title' => t('Geographic fields'),
+      '#collapsible' => TRUE);
+    
+    $set['allow_position'] = array(
+      '#type' => 'checkbox',
+      '#default_value' => variable_get('allow_position_'. $type, FALSE),
+      '#title' => t('Use position'),
+    );
+    
+    $set['allow_area'] = array(
+      '#type' => 'checkbox',
+      '#default_value' => variable_get('allow_area_'. $type, FALSE),
+      '#title' => t('Use area'),
+    );
+    
+    $form['simple_geo'] = $set;
+  }
+  else if ($form['#id'] == 'node-form'){
+    $node = $form['#node'];
+    global $user;
+    
+    if ($form_id == $node->type .'_node_form') {
+      $allow_position = variable_get('allow_position_'. $node->type, FALSE);
+      $allow_area = variable_get('allow_area_'. $node->type, FALSE);
+      
+      $set = array(
+        '#type' => 'fieldset',
+        '#attributes' => array('id'=>'simple_geo_form'),
+        '#title' => t('Position'),
+        '#collapsible' => TRUE);
+      $editing = FALSE;
+      
+      if ($allow_position && (user_access('edit all positions') || 
+          ($node->uid == $user->uid && user_access('edit own node position')))) {
+        if (!isset($node->simple_geo_position)) {
+          $position = simple_geo_guess_position($node);
+        }
+        else {
+          $position = $node->simple_geo_position;
+        }
+
+        $set['simple_geo_position'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Position'),
+          '#attributes' => array('class'=>'simple-geo-position'),
+          '#default_value' => $position,
+          '#weight' => 1,
+        );
+        
+        $editing = true;
+      }
+      
+      if ($allow_area && (user_access('edit all areas') || 
+          ($node->uid == $user->uid && user_access('edit own node area')))) {
+        $area = '';
+        if (isset($node->simple_geo_area)) {
+          $area = $node->simple_geo_area;
+        }
+        
+        $set['simple_geo_area'] = array(
+          '#type' => 'textarea',
+          '#title' => t('Area'),
+          '#attributes' => array('class'=>'simple-geo-area'),
+          '#default_value' => $area,
+          '#weight' => 2,
+        );
+        
+        $editing = true;
+      }
+      
+      if ($editing) {
+        drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/node_edit.js', 'module', 'header');
+        $set['map_placeholder'] = array(
+          '#type' => 'markup',
+          '#value' => '<div class="map-placeholder"></div>',
+          '#weight' => -1,
+        );
+        $form['simple_geo'] = $set;
+      }
+    }
+  }
+}
+
+function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  $allow_position = variable_get('allow_position_'. $node->type, FALSE);
+  $allow_area = variable_get('allow_area_'. $node->type, FALSE);
+  
+  switch($op) {
+    case 'load':
+      if ($allow_position) {
+        $node->simple_geo_position = simple_geo_position($node->nid);
+      }
+      if ($allow_area) {
+        $node->simple_geo_area = simple_geo_area($node->nid);
+      }
+      break;
+    case 'delete':
+      simple_geo_delete_position($node->nid);
+      simple_geo_delete_area($node->nid);
+      break;
+    case 'update':
+    case 'insert':
+      global $user;
+      
+      if (!empty($node->simple_geo_position) && $allow_position && (user_access('edit all positions') || 
+          ($node->uid == $user->uid && user_access('edit own node position')))) {
+        simple_geo_set_position($node->nid, $node->simple_geo_position);
+      }
+      
+      if (!empty($node->simple_geo_area) && $allow_area && (user_access('edit all areas') || 
+          ($node->uid == $user->uid && user_access('edit own node area')))) {
+        simple_geo_set_area($node->nid, $node->simple_geo_area);
+      }
+      
+      simple_geo_update_cache($node->nid);
+      break;
+  }
+}
+
+function simple_geo_position($nid) {
+  $res = db_query("SELECT AsText(position) FROM {simple_geo_position} WHERE nid = %d", $nid);
+  if ($wkt = db_result($res)) {
+    return simple_geo_clean_wkt('point', $wkt);
+  }
+}
+
+function simple_geo_area($nid) {
+  $res = db_query("SELECT AsText(area) FROM {simple_geo_area} WHERE nid = %d", $nid);
+  if ($wkt = db_result($res)) {
+    return simple_geo_clean_wkt('polygon', $wkt);
+  }
+}
+
+function simple_geo_update_cache($nid) {
+  db_query("DELETE FROM {simple_geo_in_area} WHERE point_nid = %d OR area_nid = %d", $nid, $nid);
+}
+
+function simple_geo_delete_position($nid) {
+  db_query("DELETE FROM {simple_geo_position} WHERE nid = %d", $nid);
+  db_query("DELETE FROM {simple_geo_in_area} WHERE point_nid = %d", $nid);
+}
+
+function simple_geo_delete_area($nid) {
+  db_query("DELETE FROM {simple_geo_area} WHERE nid = %d", $nid);
+  db_query("DELETE FROM {simple_geo_in_area} WHERE area_nid = %d", $nid);
+}
+
+function simple_geo_set_position($nid, $position) {
+  simple_geo_delete_position($nid);
+  db_query("INSERT INTO {simple_geo_position}(nid, position)
+    VALUES(%d, GeomFromText('%s'))", $nid, simple_geo_to_wkt('point', $position));
+}
+
+function simple_geo_set_area($nid, $area) {
+  simple_geo_delete_area($nid);
+  db_query("INSERT INTO {simple_geo_area}(nid, area)
+    VALUES(%d, GeomFromText('%s'))", $nid, simple_geo_to_wkt('polygon', $area));
+}
+
+function simple_geo_to_wkt($type, $coord) {
+  switch($type) {
+    case 'point':
+      return 'POINT('. $coord .')';
+    case 'polygon':
+      return 'POLYGON(('. $coord .'))';
+  }
+}
+
+function simple_geo_clean_wkt($type, $wkt) {
+  switch($type) {
+    case 'point':
+      return preg_replace('/^POINT\((.+)\)$/', '$1', $wkt);
+    case 'polygon':
+      return preg_replace('/^POLYGON\(\((.+)\)\)$/', '$1', $wkt);
+  }
+}

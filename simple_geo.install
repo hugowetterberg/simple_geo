@@ -64,5 +64,27 @@ function simple_geo_schema() {
     'primary key' => array('nid'),
   );
   
+  $schema['simple_geo_in_area'] = array(
+    'fields' => array(
+      'point_nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'area_nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'indexes' => array(
+      'point' => array('point_nid'),
+      'area' => array('area_nid'),
+    ),
+    'primary key' => array('point_nid', 'area_nid'),
+  );
+  
   return $schema;
 }
