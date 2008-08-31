@@ -1,3 +1,68 @@
 <?php
 // $Id$
 
+/**
+ * Install hook for simple geo
+ * We have to add our spatial columns manually in the install because the are unsupported by
+ * the schema api
+ *
+ * @return void
+ * @author Hugo Wetterberg
+ **/
+function simple_geo_install() {
+  drupal_install_schema('simple_geo');
+  
+  db_query("ALTER TABLE {simple_geo_area} 
+    ADD COLUMN area POLYGON NOT NULL, 
+    ADD SPATIAL INDEX area_index(area)");
+    
+  db_query("ALTER TABLE {simple_geo_position} 
+    ADD COLUMN position POINT NOT NULL,
+    ADD SPATIAL INDEX position_index(position)");
+}
+
+/**
+ * Uninstall hook for simple geo
+ *
+ * @return void
+ * @author Hugo Wetterberg
+ **/
+function simple_geo_uninstall() {
+  drupal_uninstall_schema('simple_geo');
+}
+
+/**
+ * The base scheme for simple geo
+ * We have to add our spatial columns manually in the install because the are unsupported by
+ * the schema api
+ *
+ * @return array The database schema for simple_geo
+ * @author Hugo Wetterberg
+ **/
+function simple_geo_schema() {
+  $schema['simple_geo_position'] = array(
+    'fields' => array(
+      'nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('nid'),
+  );
+  
+  $schema['simple_geo_area'] = array(
+    'fields' => array(
+      'nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('nid'),
+  );
+  
+  return $schema;
+}
