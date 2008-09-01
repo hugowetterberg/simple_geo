@@ -1,6 +1,21 @@
 <?php
 // $Id$
 
+function simple_geo_menu() {
+  $items = array();
+  $items['node/%node/map'] = array(
+    'title' => t('Map'),
+    'page callback' => 'simple_geo_view_position',
+    'page arguments' => array(1),
+    'access callback' => 'node_access',
+    'access arguments' => array('view', 1),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'simple_geo_fallback_functions.php',
+    'weight' => 0,
+  );
+  return $items;
+}
+
 function simple_geo_perm() {
   return array(
     'edit own nodes area', 'edit own nodes position', 'edit all areas', 'edit all positions'
@@ -104,14 +119,6 @@ function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   $allow_area = variable_get('allow_area_'. $node->type, FALSE);
   
   switch($op) {
-    case 'load':
-      if ($allow_position) {
-        $node->simple_geo_position = simple_geo_position($node->nid);
-      }
-      if ($allow_area) {
-        $node->simple_geo_area = simple_geo_area($node->nid);
-      }
-      break;
     case 'delete':
       simple_geo_delete_position($node->nid);
       simple_geo_delete_area($node->nid);
@@ -131,6 +138,38 @@ function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       }
       
       simple_geo_update_cache($node->nid);
+      break;
+    case 'load':
+      if ($allow_position) {
+        $node->simple_geo_position = simple_geo_position($node->nid);
+      }
+      if ($allow_area) {
+        $node->simple_geo_area = simple_geo_area($node->nid);
+      }
+      break;
+    case 'view':
+      $map_view = '';
+      if (!empty($node->simple_geo_position)) {
+        $coords = explode(' ', $node->simple_geo_position);
+        $map_view .= '<div class="node-map"><a rel="map" title="'. 
+          t('Map for @name', array('@name'=>$node->title)) .'" href="'. url('node/'. $node->nid .'/map/') .'">'. 
+          t('Map for @name', array('@name'=>$node->title)) .'</a></div>';
+        $map_view .= '<div class="geo">'. t('Position:') .'
+         <span class="latitude">'. $coords[0] .'</span> 
+         <span class="longitude">'. $coords[1] .'</span>
+        </div>';
+        
+      }
+      
+      if (!empty($node->simple_geo_area)) {
+        $map_view .= '<script type="text/javascript">var node_'. $node->nid .'_position="'. $node->simple_geo_position .'";'.
+          'var node_'. $node->nid .'_area="'. $node->simple_geo_area .'";</script>';
+      }
+      
+      $node->content[] = array(
+        '#weight' => -1,
+        '#value' => $map_view,
+      );
       break;
   }
 }
@@ -184,6 +223,27 @@ function simple_geo_to_wkt($type, $coord) {
   }
 }
 
+function simple_geo_coordinates_to_array($coords) {
+  $pairs = explode(',', $coords);
+  $pair_count = count($pairs);
+  for($i=0; $i<$pair_count; $i++) {
+    $pairs[$i] = explode(' ',$pairs[$i]);
+  }
+  return $pairs;
+}
+
+function simple_geo_custom_separators($coords, $pair=',', $coordinate=' ') {
+  if($pair==',' && $coordinate==' ') {
+    return $coords;
+  }
+  $pairs = simple_geo_coordinates_to_array($coords);
+  $pair_count = count($pairs);
+  for($i=0; $i<$pair_count; $i++) {
+    $pairs[$i] = join($coordinate, $pairs[$i]);
+  }
+  return join($pair,$pairs);
+}
+
 function simple_geo_clean_wkt($type, $wkt) {
   switch($type) {
     case 'point':
@@ -191,4 +251,18 @@ function simple_geo_clean_wkt($type, $wkt) {
     case 'polygon':
       return preg_replace('/^POLYGON\(\((.+)\)\)$/', '$1', $wkt);
   }
+}
+
+function simple_geo_meta_tags($node) {
+  $meta = '';
+  if (!empty($node->simple_geo_position)) {
+    $c = explode(' ', $node->simple_geo_position);
+    $meta .= '<meta name="geo.placename" content="'. check_plain($node->title) .'" />';
+    $meta .= '<meta name="icbm" content="'. join(', ', $c) .'" />';
+    $meta .= '<meta name="geo.position" content="'. join('; ', $c) .'" />';
+  }
+  if (!empty($node->simple_geo_area)) {
+    $meta .= '<meta name="geo.extent" content="'. $node->simple_geo_area .'" />';
+  }
+  return $meta;
 }
