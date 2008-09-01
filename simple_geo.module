@@ -399,6 +399,9 @@ function simple_geo_custom_separators($coords, $pair=',', $coordinate=' ') {
   }
   $pairs = simple_geo_coordinates_to_array($coords);
   $pair_count = count($pairs);
+  if ($pair_count && !is_array($pairs[0])) {
+    return join($coordinate, $pairs);
+  }
   for($i=0; $i<$pair_count; $i++) {
     $pairs[$i] = join($coordinate, $pairs[$i]);
   }
