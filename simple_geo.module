@@ -188,18 +188,174 @@ function simple_geo_area($nid) {
   }
 }
 
-function simple_geo_update_cache($nid) {
-  db_query("DELETE FROM {simple_geo_in_area} WHERE point_nid = %d OR area_nid = %d", $nid, $nid);
+/**
+ * Updates the cache for the spatial relationship between points and polygons
+ *
+ * @param int $nid The node to update the cache for
+ * @param string $op The cache type to update. 'area', 'point' or 'all', defaults to 'all'
+ *
+ * @return void
+ * @author Hugo Wetterberg
+ **/
+function simple_geo_update_cache($nid, $op='all') {
+  $updates = array();
+  
+  if ($op=='all') {
+    //Delete all cache entries
+    db_query("DELETE FROM {simple_geo_in_area} WHERE point_nid = %d OR area_nid = %d", $nid, $nid);
+  }
+  
+  //Refresh cache for position
+  if ($op!='area') {
+    if ($op!='all') {
+      //Delete all position cache entries
+      db_query("DELETE FROM {simple_geo_in_area} WHERE point_nid = %d", $nid);
+    }
+    $position = simple_geo_position($nid);
+    if ($position) {
+      $p_array = simple_geo_coordinates_to_array($position);
+      $res = db_query("SELECT nid, AsText(area) as area_wkt 
+        FROM {simple_geo_area}
+        WHERE Contains(area, GeomFromText('%s'))", simple_geo_to_wkt('point', $position));
+      $areas = array();
+      while ($bb_match = db_fetch_object($res)) {
+        $a_coords = simple_geo_clean_wkt('polygon', $bb_match->area_wkt);
+        if (simple_geo_point_in_polygon($a_coords, $p_array)) {
+          $updates[$nid] = $bb_match->nid;
+        }
+      }
+    }
+  }
+  
+  //Refresh cache for area
+  if ($op!='point') {
+    if ($op!='all') {
+      //Delete all area cache entries
+      db_query("DELETE FROM {simple_geo_in_area} WHERE area_nid = %d", $nid);
+    }
+    $area = simple_geo_area($nid);
+    if ($area) {
+      $a_array = simple_geo_coordinates_to_array($area);
+      $res = db_query("SELECT nid, AsText(position) as position_wkt 
+        FROM {simple_geo_position}
+        WHERE Contains(GeomFromText('%s'), position)", simple_geo_to_wkt('polygon', $area));
+      $points = array();
+      while ($bb_match = db_fetch_object($res)) {
+        $p_coords = simple_geo_clean_wkt('point', $bb_match->position_wkt);
+        if (simple_geo_point_in_polygon($a_array, $p_coords)) {
+          $updates[$bb_match->nid] = $nid;
+        }
+      }
+    }
+  }
+  
+  //Add all new cache items
+  if(count($updates)) {
+    $handlers = module_implements('simple_geo_inside');
+    $query = "INSERT INTO {simple_geo_in_area}(point_nid, area_nid) VALUES";
+    foreach ($updates as $point => $area) {
+      foreach($handlers as $module) {
+        call_user_func($module .'_simple_geo_inside', $point, $area);
+      }
+      $query .= '('. $point .','. $area .'),';
+    }
+    db_query(trim($query,','));
+  }
+}
+
+function simple_geo_point_on_vertex($point, $vertices) {
+  foreach($vertices as $vertex) {
+    if ($point == $vertex) {
+      return true;
+    }
+  }
+}
+
+/**
+ * Checks if a nodes point is inside a nodes area
+ *
+ * @param int $area_nid The nid of the area node
+ * @param int $position_nid The nid of the position node
+ *
+ * @return void
+ * @author Hugo Wetterberg
+ **/
+function simple_geo_contains($area_nid, $position_nid) {
+  $res = db_query("SELECT COUNT(*) FROM {simple_geo_in_area} WHERE point_nid=%d AND area_nid=%d", $position_nid, $area_nid);
+  return db_result($res)==1;
+}
+
+/**
+ * Function that returns the necessary information for integrating with the
+ * spatial relationship cache
+ *
+ * @return void
+ * @author Hugo Wetterberg
+ **/
+function simple_geo_db_info() {
+  return array(
+    'table' => 'simple_geo_in_area',
+    'position' => 'point_nid',
+    'area' => 'area_nid',
+  );
+}
+
+function simple_geo_point_in_polygon($polygon, $point) {
+  // Transform string coordinates into arrays with lat and long values
+  if (!is_array($point)) {
+    $point = simple_geo_coordinates_to_array($point);
+  }
+  $vertices = $polygon; 
+  if (!is_array($vertices)) {
+    $vertices = simple_geo_coordinates_to_array($vertices);
+  }
+  
+  // Check if the point sits exactly on a vertex
+  if (simple_geo_point_on_vertex($point, $vertices) == true) {
+    return true;
+  }
+  
+  // Check if the point is inside the polygon or on the boundary
+  $intersections = 0; 
+  $vertices_count = count($vertices);
+  
+  for ($i=1; $i < $vertices_count; $i++) {
+    $vertex1 = $vertices[$i-1]; 
+    $vertex2 = $vertices[$i];
+    if ($vertex1[1] == $vertex2[1] 
+        and $vertex1[1] == $point[1] 
+        and $point[0] > min($vertex1[0], $vertex2[0]) 
+        and $point[0] < max($vertex1[0], $vertex2[0])) { // Check if point is on an horizontal polygon boundary
+      return true;
+    }
+    if ($point[1] > min($vertex1[1], $vertex2[1]) 
+        and $point[1] <= max($vertex1[1], $vertex2[1]) 
+        and $point[0] <= max($vertex1[0], $vertex2[0]) 
+        and $vertex1[1] != $vertex2[1]) { 
+      $xinters = ($point[1] - $vertex1[1]) * ($vertex2[0] - $vertex1[0]) / ($vertex2[1] - $vertex1[1]) + $vertex1[0]; 
+      
+      if ($xinters == $point[0]) { // Check if point is on the polygon boundary (other than horizontal)
+        return true;
+      }
+      if ($vertex1[0] == $vertex2[0] || $point[0] <= $xinters) {
+        $intersections++; 
+      }
+    } 
+  } 
+  // If the number of edges we passed through is even, then it's in the polygon. 
+  if ($intersections % 2 != 0) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 function simple_geo_delete_position($nid) {
   db_query("DELETE FROM {simple_geo_position} WHERE nid = %d", $nid);
-  db_query("DELETE FROM {simple_geo_in_area} WHERE point_nid = %d", $nid);
 }
 
 function simple_geo_delete_area($nid) {
   db_query("DELETE FROM {simple_geo_area} WHERE nid = %d", $nid);
-  db_query("DELETE FROM {simple_geo_in_area} WHERE area_nid = %d", $nid);
 }
 
 function simple_geo_set_position($nid, $position) {
@@ -229,7 +385,12 @@ function simple_geo_coordinates_to_array($coords) {
   for($i=0; $i<$pair_count; $i++) {
     $pairs[$i] = explode(' ',$pairs[$i]);
   }
-  return $pairs;
+  if ($pair_count==1) {
+    return $pairs[0];
+  }
+  else {
+    return $pairs;
+  }
 }
 
 function simple_geo_custom_separators($coords, $pair=',', $coordinate=' ') {
