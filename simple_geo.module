@@ -301,17 +301,22 @@ function simple_geo_update_cache($nid, $op='all') {
     }
   }
   
-  //Add all new cache items
+  
   if(count($updates)) {
-    $handlers = module_implements('simple_geo_inside');
+    //Add all new cache items
     $query = "INSERT INTO {simple_geo_in_area}(point_nid, area_nid) VALUES";
+    foreach ($updates as $point => $area) {
+      $query .= '('. $point .','. $area .'),';
+    }
+    db_query(trim($query,','));
+    
+    //Notify all modules of new spatial relationships
+    $handlers = module_implements('simple_geo_inside');
     foreach ($updates as $point => $area) {
       foreach($handlers as $module) {
         call_user_func($module .'_simple_geo_inside', $point, $area);
       }
-      $query .= '('. $point .','. $area .'),';
     }
-    db_query(trim($query,','));
   }
 }
 
