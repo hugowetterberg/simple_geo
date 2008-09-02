@@ -1,6 +1,17 @@
 <?php
 // $Id$
 
+define('SIMPLE_GEO_PAIR_SEPARATOR', ',');
+define('SIMPLE_GEO_COORDINATE_SEPARATOR', ' ');
+
+require('includes/simple_geo_themeable_functions.php');
+
+/**
+ * Implementation of hook_menu
+ *
+ * @return void
+ * @author Hugo Wetterberg
+ **/
 function simple_geo_menu() {
   $items = array();
   $items['node/%node/map'] = array(
@@ -10,23 +21,41 @@ function simple_geo_menu() {
     'access callback' => 'node_access',
     'access arguments' => array('view', 1),
     'type' => MENU_LOCAL_TASK,
-    'file' => 'simple_geo_fallback_functions.php',
+    'file' => 'includes/simple_geo_fallback_functions.php',
     'weight' => 0,
   );
   return $items;
 }
 
+/**
+ * Implementation of hook_perm
+ *
+ * @return array
+ * @author Hugo Wetterberg
+ **/
 function simple_geo_perm() {
   return array(
     'edit own nodes area', 'edit own nodes position', 'edit all areas', 'edit all positions'
   );
 }
 
-function simple_geo_guess_position() {
+/**
+ * Unimplemented.
+ *
+ * This method will provide mechanisms for guessing positions
+ *
+ **/
+function simple_geo_guess_position($node) {
   return '';
 }
 
-function simple_geo_form_alter($form, $form_state, $form_id) {
+/**
+ * Implementation of hook_form_alter
+ *
+ * @return void
+ * @author Hugo Wetterberg
+ **/
+function simple_geo_form_alter(&$form, $form_state, $form_id) {
   if ($form_id == 'node_type_form') {
     $type = $form['#node_type']->type;
     $set = array(
@@ -114,6 +143,12 @@ function simple_geo_form_alter($form, $form_state, $form_id) {
   }
 }
 
+/**
+ * Inplementation of hook_nodeapi
+ *
+ * @return mixed
+ * @author Hugo Wetterberg
+ **/
 function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   $allow_position = variable_get('allow_position_'. $node->type, FALSE);
   $allow_area = variable_get('allow_area_'. $node->type, FALSE);
@@ -170,10 +205,19 @@ function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
         '#weight' => -1,
         '#value' => $map_view,
       );
+      
       break;
   }
 }
 
+/**
+ * Gets the position of a node. 
+ *
+ * @param int $nid The id of the node
+ *
+ * @return string The point as a coordinate pair in the same format as WKT
+ * @author Hugo Wetterberg
+ **/
 function simple_geo_position($nid) {
   $res = db_query("SELECT AsText(position) FROM {simple_geo_position} WHERE nid = %d", $nid);
   if ($wkt = db_result($res)) {
@@ -181,6 +225,14 @@ function simple_geo_position($nid) {
   }
 }
 
+/**
+ * Gets the area of a node. 
+ *
+ * @param int $nid The id of the node
+ *
+ * @return string The vertexes of the polygon as coordinate pairs in the same format as WKT
+ * @author Hugo Wetterberg
+ **/
 function simple_geo_area($nid) {
   $res = db_query("SELECT AsText(area) FROM {simple_geo_area} WHERE nid = %d", $nid);
   if ($wkt = db_result($res)) {
@@ -220,7 +272,7 @@ function simple_geo_update_cache($nid, $op='all') {
       $areas = array();
       while ($bb_match = db_fetch_object($res)) {
         $a_coords = simple_geo_clean_wkt('polygon', $bb_match->area_wkt);
-        if (simple_geo_point_in_polygon($a_coords, $p_array)) {
+        if (simple_geo_point_in_polygon($p_array, $a_coords)) {
           $updates[$nid] = $bb_match->nid;
         }
       }
@@ -242,7 +294,7 @@ function simple_geo_update_cache($nid, $op='all') {
       $points = array();
       while ($bb_match = db_fetch_object($res)) {
         $p_coords = simple_geo_clean_wkt('point', $bb_match->position_wkt);
-        if (simple_geo_point_in_polygon($a_array, $p_coords)) {
+        if (simple_geo_point_in_polygon($p_coords, $a_array)) {
           $updates[$bb_match->nid] = $nid;
         }
       }
@@ -260,14 +312,6 @@ function simple_geo_update_cache($nid, $op='all') {
       $query .= '('. $point .','. $area .'),';
     }
     db_query(trim($query,','));
-  }
-}
-
-function simple_geo_point_on_vertex($point, $vertices) {
-  foreach($vertices as $vertex) {
-    if ($point == $vertex) {
-      return true;
-    }
   }
 }
 
@@ -300,7 +344,16 @@ function simple_geo_db_info() {
   );
 }
 
-function simple_geo_point_in_polygon($polygon, $point) {
+/**
+ * Checks if a point is inside a polygon
+ *
+ * @param array $point An array containing lat & long or a WKT formatted string with a coordinate pair
+ * @param array $point An array containing arrays of lat & long or a WKT formatted string with a coordinate pairs
+ *
+ * @return bool
+ * @author Hugo Wetterberg
+ **/
+function simple_geo_point_in_polygon($point, $polygon) {
   // Transform string coordinates into arrays with lat and long values
   if (!is_array($point)) {
     $point = simple_geo_coordinates_to_array($point);
@@ -350,26 +403,87 @@ function simple_geo_point_in_polygon($polygon, $point) {
   }
 }
 
+/**
+ * Helper function for simple_geo_point_in_polygon that checks
+ * if a point is on a vertex
+ *
+ * @return bool
+ * @author Hugo Wetterberg
+ **/
+function simple_geo_point_on_vertex($point, $vertices) {
+  foreach($vertices as $vertex) {
+    if ($point == $vertex) {
+      return true;
+    }
+  }
+}
+
+/**
+ * Deletes the position of a node
+ *
+ * Does NOT update the cache
+ * see simple_geo_update_cache for updating the cache
+ *
+ * @return void
+ * @author Hugo Wetterberg
+ **/
 function simple_geo_delete_position($nid) {
   db_query("DELETE FROM {simple_geo_position} WHERE nid = %d", $nid);
 }
 
+/**
+ * Deletes the area of a node
+ *
+ * Does NOT update the cache
+ * see simple_geo_update_cache for updating the cache
+ * 
+ * @return void
+ * @author Hugo Wetterberg
+ **/
 function simple_geo_delete_area($nid) {
   db_query("DELETE FROM {simple_geo_area} WHERE nid = %d", $nid);
 }
 
+/**
+ * Sets the position of a node
+ *
+ * Does NOT update the cache
+ * see simple_geo_update_cache for updating the cache
+ *
+ * @return void
+ * @author Hugo Wetterberg
+ **/
 function simple_geo_set_position($nid, $position) {
   simple_geo_delete_position($nid);
   db_query("INSERT INTO {simple_geo_position}(nid, position)
     VALUES(%d, GeomFromText('%s'))", $nid, simple_geo_to_wkt('point', $position));
 }
 
+/**
+ * Sets the area of a node
+ *
+ * Does NOT update the cache
+ * see simple_geo_update_cache for updating the cache
+ *
+ * @return void
+ * @author Hugo Wetterberg
+ **/
 function simple_geo_set_area($nid, $area) {
   simple_geo_delete_area($nid);
   db_query("INSERT INTO {simple_geo_area}(nid, area)
     VALUES(%d, GeomFromText('%s'))", $nid, simple_geo_to_wkt('polygon', $area));
 }
 
+
+/**
+ * Constructs a WKT-string for points and polygons
+ *
+ * @param string $type The WKT-type to construct, 'point' or 'polygon'
+ * @param string $coord The coodinate string with coordinates and pairs separated according to the WKT standard
+ *
+ * @return string The WKT-string
+ * @author Hugo Wetterberg
+ **/
 function simple_geo_to_wkt($type, $coord) {
   switch($type) {
     case 'point':
@@ -379,6 +493,18 @@ function simple_geo_to_wkt($type, $coord) {
   }
 }
 
+/**
+ * Takes a of with coordinates in the WKT-format and
+ * and returns them as an array.
+ *
+ * If the string only contains a single coordinate pair
+ * an array with lat,long will be returned. Otherwise 
+ * an array containing arrays for each coordinate pair
+ * will be returned.
+ *
+ * @return void
+ * @author Hugo Wetterberg
+ **/
 function simple_geo_coordinates_to_array($coords) {
   $pairs = explode(',', $coords);
   $pair_count = count($pairs);
@@ -393,21 +519,38 @@ function simple_geo_coordinates_to_array($coords) {
   }
 }
 
-function simple_geo_custom_separators($coords, $pair=',', $coordinate=' ') {
-  if($pair==',' && $coordinate==' ') {
+/**
+ * Helper function that takes a string with WKT 
+ * formatted coordinate pairs and changes it to
+ * use other separators.
+ *
+ * @return string The reformatted coordinate pairs
+ * @author Hugo Wetterberg
+ **/
+function simple_geo_custom_separators($coords, $pair=SIMPLE_GEO_PAIR_SEPARATOR, $coordinate=SIMPLE_GEO_COORDINATE_SEPARATOR) {
+  //No change required
+  if ($pair==SIMPLE_GEO_PAIR_SEPARATOR && $coordinate==SIMPLE_GEO_COORDINATE_SEPARATOR) {
     return $coords;
   }
-  $pairs = simple_geo_coordinates_to_array($coords);
-  $pair_count = count($pairs);
-  if ($pair_count && !is_array($pairs[0])) {
-    return join($coordinate, $pairs);
-  }
-  for($i=0; $i<$pair_count; $i++) {
-    $pairs[$i] = join($coordinate, $pairs[$i]);
-  }
-  return join($pair,$pairs);
+  
+  //Map separators to temporary tokens to avoid mixup of separator types
+  $coords = str_replace(SIMPLE_GEO_PAIR_SEPARATOR, '#P', $coords);
+  $coords = str_replace(SIMPLE_GEO_COORDINATE_SEPARATOR, '#C', $coords);
+  
+  //Return the string with the new separators
+  return str_replace('#P',$pair,str_replace('#C',$coordinate,$coords));
 }
 
+/**
+ * Removes WKT geometry type information to return a
+ * clean string containing the coordinate pairs
+ *
+ * @param $type The type of the WKT string. 'point' or 'polygon'
+ * @param $type The WKT-representation of a geometry
+ *
+ * @return string The coordinate pairs
+ * @author Hugo Wetterberg
+ **/
 function simple_geo_clean_wkt($type, $wkt) {
   switch($type) {
     case 'point':
@@ -415,18 +558,4 @@ function simple_geo_clean_wkt($type, $wkt) {
     case 'polygon':
       return preg_replace('/^POLYGON\(\((.+)\)\)$/', '$1', $wkt);
   }
-}
-
-function simple_geo_meta_tags($node) {
-  $meta = '';
-  if (!empty($node->simple_geo_position)) {
-    $c = explode(' ', $node->simple_geo_position);
-    $meta .= '<meta name="geo.placename" content="'. check_plain($node->title) .'" />';
-    $meta .= '<meta name="icbm" content="'. join(', ', $c) .'" />';
-    $meta .= '<meta name="geo.position" content="'. join('; ', $c) .'" />';
-  }
-  if (!empty($node->simple_geo_area)) {
-    $meta .= '<meta name="geo.extent" content="'. $node->simple_geo_area .'" />';
-  }
-  return $meta;
 }
