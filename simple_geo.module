@@ -336,12 +336,42 @@ function simple_geo_contains($area_nid, $position_nid) {
 
 /**
  * Function that returns the necessary information for integrating with the
+ * position data table
+ *
+ * @return void
+ * @author Hugo Wetterberg
+ **/
+function simple_geo_position_db_info() {
+  return array(
+    'table' => 'simple_geo_position',
+    'node' => 'nid',
+    'geometry' => 'position',
+  );
+}
+
+/**
+ * Function that returns the necessary information for integrating with the
+ * area data table
+ *
+ * @return void
+ * @author Hugo Wetterberg
+ **/
+function simple_geo_area_db_info() {
+  return array(
+    'table' => 'simple_geo_area',
+    'node' => 'nid',
+    'geometry' => 'area',
+  );
+}
+
+/**
+ * Function that returns the necessary information for integrating with the
  * spatial relationship cache
  *
  * @return void
  * @author Hugo Wetterberg
  **/
-function simple_geo_db_info() {
+function simple_geo_cache_db_info() {
   return array(
     'table' => 'simple_geo_in_area',
     'position' => 'point_nid',
@@ -483,7 +513,7 @@ function simple_geo_set_area($nid, $area) {
 /**
  * Constructs a WKT-string for points and polygons
  *
- * @param string $type The WKT-type to construct, 'point' or 'polygon'
+ * @param string $type The WKT-type to construct, 'point', 'polygon' or 'linestring'
  * @param string $coord The coodinate string with coordinates and pairs separated according to the WKT standard
  *
  * @return string The WKT-string
@@ -495,6 +525,8 @@ function simple_geo_to_wkt($type, $coord) {
       return 'POINT('. $coord .')';
     case 'polygon':
       return 'POLYGON(('. $coord .'))';
+    case 'linestring':
+      return 'LINESTRING('. $coord .')';
   }
 }
 
