@@ -1,13 +1,16 @@
+// $Id$
 
-google.setOnLoadCallback(function() {
+jQuery(document).ready(function() {
   
+  //Creates a LatLng object from a coordinate string
   var wkt_to_latlng = function(wkt) {
     var coords = wkt.split(' ');
     if (coords.length >= 2) {
-      return new GLatLng(coords[0], coords[1])
+      return new google.maps.LatLng(coords[0], coords[1])
     }
   }
   
+  //Creates an array of LatLng objects from a coordinate list string
   var polygon_wkt_to_latlng = function(wkt) {
     var pairs = wkt.split(',');
     var pair_count = pairs.length;
@@ -28,42 +31,51 @@ google.setOnLoadCallback(function() {
   jQuery('#edit-simple-geo-position-wrapper').hide();
   jQuery('#edit-simple-geo-area-wrapper').hide();
   
+  //Create map view
   var placeholder = jQuery('.map-placeholder:first').css({'width': '100%', 'height': '400px'}).get(0);
   var map = new google.maps.Map2(placeholder);
-  map.setCenter(new google.maps.LatLng(55.675455,12.59119), 13);
+  
+  //Get coordinate data
   var aCoords = jQuery('#edit-simple-geo-area').attr('value');
   var pCoords = jQuery('#edit-simple-geo-position').attr('value');
   
+  //Center the map on the position if we have one
+  var position = wkt_to_latlng(pCoords);
+  if (!position) {
+    position = new google.maps.LatLng(55.675455,12.59119);//Make this coordinate configurable or intelligent
+  }
+  map.setCenter(position, 13);
+  
+  //Create our marker and make it draggable
+  var marker = new GMarker(position, {draggable: true});
+  // GEvent.addListener(marker, "dragstart", function() {
+  // });
+  
+  //Update the position text-field on drag end
+  GEvent.addListener(marker, "dragend", function() {
+    jQuery('#edit-simple-geo-position').attr('value',wkt_coord(this.getLatLng()));
+  });
+  
+  //Add the marker to the map
+  map.addOverlay(marker);
+  
+  //Create the polygon and set it up so that the user can edit it
   var color = "#ff0000";
-  
   var polygon = new GPolygon([], color, 2, 0.7, color, 0.2);
-  
   map.addOverlay(polygon);
   polygon.enableDrawing();
   polygon.enableEditing({onEvent: "mouseover"});
   
+  //Add existing vertexes to the polygon. Adding them before 
+  //drawing and editing is enabled results in strange behaviour
   var polygon_default = polygon_wkt_to_latlng(aCoords);
   for(var i=0; i<polygon_default.length; i++) {
     polygon.insertVertex(i, polygon_default[i]);
   }
   
-  var marker_default = wkt_to_latlng(pCoords);
-  if (!marker_default) {
-    marker_default = map.getCenter()
-  }
-  else {
-    map.setCenter(marker_default, 13);
-  }
-  
-  var marker = new GMarker(marker_default, {draggable: true});
-
-  GEvent.addListener(marker, "dragstart", function() {
-  });
-
-  GEvent.addListener(marker, "dragend", function() {
-    jQuery('#edit-simple-geo-position').attr('value',wkt_coord(this.getLatLng()));
-  });
-  
+  //Update the area textarea when the polygon is updated
+  //TODO: This should be done on form submit, as it's slightly 
+  //more expensive than it's position counterpart.
   GEvent.addListener(polygon, "lineupdated", function() {
     var vCount = this.getVertexCount();
     var cArray = [];
@@ -72,6 +84,4 @@ google.setOnLoadCallback(function() {
     }
     jQuery('#edit-simple-geo-area').attr('value',cArray.join(','));
   });
-
-  map.addOverlay(marker);
 });
