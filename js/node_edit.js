@@ -42,27 +42,25 @@ if (google && google.load) {
     var aCoords = jQuery('#edit-simple-geo-area').attr('value');
     var pCoords = jQuery('#edit-simple-geo-position').attr('value');
     
-    if (pCoords) {
-      //Center the map on the position if we have one
-      var position = wkt_to_latlng(pCoords);
-      if (!position) {
-        position = new google.maps.LatLng(55.675455,12.59119);//Make this coordinate configurable or intelligent
-      }
-      map.setCenter(position, 13);
-      
-      //Create our marker and make it draggable
-      var marker = new GMarker(position, {draggable: true});
-      // GEvent.addListener(marker, "dragstart", function() {
-      // });
-      
-      //Update the position text-field on drag end
-      GEvent.addListener(marker, "dragend", function() {
-        jQuery('#edit-simple-geo-position').attr('value',wkt_coord(this.getLatLng()));
-      });
-      
-      //Add the marker to the map
-      map.addOverlay(marker);
+    //Center the map on the position if we have one
+    var position = wkt_to_latlng(pCoords ? pCoords : '');
+    if (!position) {
+      position = new google.maps.LatLng(55.675455,12.59119);//Make this coordinate configurable or intelligent
     }
+    map.setCenter(position, 13);
+    
+    //Create our marker and make it draggable
+    var marker = new GMarker(position, {draggable: true});
+    // GEvent.addListener(marker, "dragstart", function() {
+    // });
+    
+    //Update the position text-field on drag end
+    GEvent.addListener(marker, "dragend", function() {
+      jQuery('#edit-simple-geo-position').attr('value',wkt_coord(this.getLatLng()));
+    });
+    
+    //Add the marker to the map
+    map.addOverlay(marker);
     
     if (aCoords) {
       //Create the polygon and set it up so that the user can edit it
