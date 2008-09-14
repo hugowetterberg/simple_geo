@@ -198,7 +198,7 @@ function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       }
       
       $node->content[] = array(
-        '#weight' => -1,
+        '#weight' => 50,
         '#value' => $map_view,
       );
       
