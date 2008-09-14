@@ -19,7 +19,7 @@ function simple_geo_menu() {
     'page arguments' => array(1),
     'access callback' => 'node_access',
     'access arguments' => array('view', 1),
-    'type' => MENU_LOCAL_TASK,
+    'type' => MENU_CALLBACK,
     'file' => 'includes/simple_geo_fallback_functions.php',
     'weight' => 0,
   );
@@ -185,11 +185,7 @@ function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
         $map_view .= '<div class="node-map"><a rel="map" title="'. 
           t('Map for @name', array('@name'=>$node->title)) .'" href="'. url('node/'. $node->nid .'/map/') .'">'. 
           t('Show on map') .'</a></div>';
-        $map_view .= '<div class="geo">'. t('Position:') .'
-         <span class="latitude">'. $coords[0] .'</span> 
-         <span class="longitude">'. $coords[1] .'</span>
-        </div>';
-        
+        $map_view .= '<div class="geo"><span class="latitude">'. $coords[0] .'</span><span class="longitude">'. $coords[1] .'</span></div>';
       }
       
       if (!empty($node->simple_geo_area)) {
