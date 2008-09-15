@@ -88,7 +88,11 @@ function simple_geo_form_alter(&$form, $form_state, $form_id) {
         '#title' => t('Position'),
         '#collapsible' => TRUE);
       $editing = FALSE;
-      
+
+      if (module_exists('content')) {
+        $set['#weight'] = content_extra_field_weight($form['type']['#value'], 'simple_geo');
+      }
+
       if ($allow_position && (user_access('edit all positions') || 
           ($node->uid == $user->uid && user_access('edit own node position')))) {
         if (!isset($node->simple_geo_position)) {
@@ -138,6 +142,23 @@ function simple_geo_form_alter(&$form, $form_state, $form_id) {
       }
     }
   }
+}
+
+/**
+ * Implementation of hook_content_extra_fields.
+ */
+function simple_geo_content_extra_fields($type_name) {
+  $extras = array();
+  
+  if (variable_get('allow_position_'. $type_name, FALSE) || variable_get('allow_area_'. $type_name, FALSE)) {
+    $extra['simple_geo'] = array(
+      'label' => t('Position'),
+      'description' => t('Simple Geo module form.'),
+      'weight' => 0,
+    );
+  }
+    
+  return $extra;
 }
 
 /**
