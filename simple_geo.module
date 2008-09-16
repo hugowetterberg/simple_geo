@@ -83,10 +83,11 @@ function simple_geo_form_alter(&$form, $form_state, $form_id) {
       $allow_area = variable_get('allow_area_'. $node->type, FALSE);
       
       $set = array(
-        '#type' => 'fieldset',
-        '#attributes' => array('id'=>'simple_geo_form'),
+        '#type' => 'item',
+        '#prefix' => '<div id="simple_geo_form">',
+        '#suffix' => '</div>',
         '#title' => t('Position'),
-        '#collapsible' => TRUE);
+        );
       $editing = FALSE;
 
       if (module_exists('content')) {
