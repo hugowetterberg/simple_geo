@@ -9,12 +9,11 @@ if (google && google.load) {
     var wkt_to_latlng = function(wkt) {
       var coords = wkt.split(' ');
       if (coords.length >= 2) {
-        return new google.maps.LatLng(coords[0], coords[1])
+        return new google.maps.LatLng(coords[0], coords[1]);
       }
-    }
-    
+    },
     //Creates an array of LatLng objects from a coordinate list string
-    var polygon_wkt_to_latlng = function(wkt) {
+    polygon_wkt_to_latlng = function(wkt) {
       var pairs = wkt.split(',');
       var pair_count = pairs.length;
       var coords = [];
@@ -25,14 +24,13 @@ if (google && google.load) {
         }
       }
       return coords;
-    }
-    
-    var wkt_coord = function(ll) {
+    },
+    wkt_coord = function(ll) {
       return ll.lat() + ' ' + ll.lng();
-    }
+    };
     
-    jQuery('#edit-simple-geo-position-wrapper').hide();
-    jQuery('#edit-simple-geo-area-wrapper').hide();
+    jQuery('#edit-simple-geo-position-wrapper').hide().length;
+    var has_area = jQuery('#edit-simple-geo-area-wrapper').hide().length;
     
     //Create map view
     var placeholder = jQuery('.map-placeholder:first').css({'width': '100%', 'height': '400px'}).get(0);
@@ -62,21 +60,21 @@ if (google && google.load) {
     //Add the marker to the map
     map.addOverlay(marker);
     
-    if (aCoords) {
+    if (has_area) {
       //Create the polygon and set it up so that the user can edit it
       var color = "#ff0000";
       var polygon = new GPolygon([], color, 2, 0.7, color, 0.2);
       map.addOverlay(polygon);
       polygon.enableDrawing();
       polygon.enableEditing({onEvent: "mouseover"});
-      
+
       //Add existing vertexes to the polygon. Adding them before 
       //drawing and editing is enabled results in strange behaviour
       var polygon_default = polygon_wkt_to_latlng(aCoords);
       for(var i=0; i<polygon_default.length; i++) {
         polygon.insertVertex(i, polygon_default[i]);
       }
-      
+
       //Update the area textarea when the polygon is updated
       //TODO: This should be done on form submit, as it's slightly 
       //more expensive than it's position counterpart.
