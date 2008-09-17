@@ -47,8 +47,17 @@ if (google && google.load) {
     }
     map.setCenter(position, 13);
     
+    var icon;
     //Create our marker and make it draggable
-    var marker = new GMarker(position, {draggable: true});
+    if (Drupal.settings['user_map']) {
+      icon = new GIcon(G_DEFAULT_ICON);
+      icon.shadow = null;
+      icon.iconSize = new GSize(20, 29);
+      icon.iconAnchor = new GPoint(9, 29);
+      icon.image = Drupal.settings.user_map.favicon_path +'/default/0/marker.png';
+    }
+    
+    var marker = new GMarker(position, {draggable: true, icon: icon});
     // GEvent.addListener(marker, "dragstart", function() {
     // });
     
