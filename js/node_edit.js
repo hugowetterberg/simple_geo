@@ -41,7 +41,7 @@ if (google && google.load) {
     var pCoords = jQuery('#edit-simple-geo-position').attr('value');
     
     //Center the map on the position if we have one
-    var position = wkt_to_latlng(pCoords ? pCoords : '');
+    var position = wkt_to_latlng(pCoords ? pCoords : (Drupal.settings.simple_geo_position ? Drupal.settings.simple_geo_position : ''));
     if (!position) {
       position = new google.maps.LatLng(55.675455,12.59119);//Make this coordinate configurable or intelligent
     }
