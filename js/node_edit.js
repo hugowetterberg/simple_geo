@@ -52,9 +52,30 @@ if (google && google.load) {
     // GEvent.addListener(marker, "dragstart", function() {
     // });
     
+    var moved = false;
+    
     //Update the position text-field on drag end
     GEvent.addListener(marker, "dragend", function() {
+      moved = true;
       jQuery('#edit-simple-geo-position').attr('value',wkt_coord(this.getLatLng()));
+    });
+    
+    jQuery(document).one('nodeLoaded', function (e, nid) {
+      if (!moved) {
+        Drupal.service('node.get', 
+          [
+            nid,
+            ['simple_geo_position']
+          ], 
+          function (res, err) {
+            if (res && res.simple_geo_position && !moved) {
+              var position = wkt_to_latlng(res.simple_geo_position);
+              map.setCenter(position, 13);
+              marker.setLatLng(position);
+            }
+          }
+        );
+      }
     });
     
     //Add the marker to the map
