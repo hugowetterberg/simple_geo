@@ -133,16 +133,22 @@ function simple_geo_form_alter(&$form, $form_state, $form_id) {
       }
       
       if ($editing) {
-        drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/node_edit.js', 'module', 'header');
+        
         $set['map_placeholder'] = array(
           '#type' => 'markup',
           '#value' => '<div class="map-placeholder"></div>',
           '#weight' => -1,
+          '#after_build' => array('simple_geo_add_form_js'),
         );
         $form['simple_geo'] = $set;
       }
     }
   }
+}
+
+function simple_geo_add_form_js($form) {
+  drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/node_edit.js', 'module', 'header');
+  return $form;
 }
 
 /**
