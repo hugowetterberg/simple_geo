@@ -62,7 +62,6 @@ if (google && google.load) {
     
     //Update the position text-field on drag end
     GEvent.addListener(marker, "dragend", function() {
-      moved = true;
       jQuery('#edit-simple-geo-position').attr('value',wkt_coord(this.getLatLng()));
     });
     

@@ -47,12 +47,62 @@ function simple_geo_guess_position($node) {
   return '';
 }
 
+
+function simple_geo_user($op, &$edit, &$account, $category = NULL) {
+  switch ($op) {
+    case 'form':
+      $set = array(
+        '#type' => 'item',
+        '#prefix' => '<div id="simple_geo_form">',
+        '#suffix' => '</div>',
+        '#title' => t('Position'),
+        '#weight' => -20,
+      );
+      
+      $position = simple_geo_position($account->uid, 'user');
+
+      $set['simple_geo_position'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Position'),
+        '#attributes' => array('class'=>'simple-geo-position'),
+        '#default_value' => $position,
+        '#weight' => 1,
+      );
+
+      $set['map_placeholder'] = array(
+        '#type' => 'markup',
+        '#value' => '<div class="map-placeholder"></div>',
+        '#weight' => -1,
+        '#after_build' => array('simple_geo_add_form_js'),
+      );
+      
+      return array('simple_geo'=>$set);
+    break;
+    case 'insert':
+    case 'update':
+      exit;
+      if (isset($edit->simple_geo_position)) {
+        simple_geo_set_position($account->uid, 'user', $edit->simple_geo_position);
+      }
+      
+      //Make sure that we've cleared out all our stuff
+      //to prevent user data pollution
+      foreach ($edit as $key => $value) {
+        if (strpos($key, 'simple_geo_') === 0) {
+          unset($edit[$key]);
+        }
+      }
+    break;
+  }
+}
+
 /**
  * Implementation of hook_form_alter
  *
  * @return void
  **/
 function simple_geo_form_alter(&$form, $form_state, $form_id) {
+  
   if ($form_id == 'node_type_form') {
     $type = $form['#node_type']->type;
     $set = array(
@@ -294,7 +344,7 @@ function simple_geo_update_cache($id, $type, $op='all') {
       db_query("DELETE FROM {simple_geo_in_area} WHERE point_nid = %d AND point_type='%s'", $nid, $type);
     }
     
-    $position = simple_geo_position($id);
+    $position = simple_geo_position($id, $type);
     if ($position) {
       $p_array = simple_geo_coordinates_to_array($position);
       $res = db_query("SELECT nid, type, AsText(area) as area_wkt 
@@ -315,7 +365,7 @@ function simple_geo_update_cache($id, $type, $op='all') {
       //Delete all area cache entries
       db_query("DELETE FROM {simple_geo_in_area} WHERE area_nid = %d AND area_type='%s'", $nid, $type);
     }
-    $area = simple_geo_area($nid);
+    $area = simple_geo_area($nid, $type);
     if ($area) {
       $a_array = simple_geo_coordinates_to_array($area);
       $res = db_query("SELECT nid, type, AsText(position) as position_wkt 
