@@ -333,16 +333,18 @@ function simple_geo_update_cache($id, $type, $op='all') {
   
   if ($op=='all') {
     //Delete all cache entries
-    db_query("DELETE FROM {simple_geo_in_area} WHERE (point_nid = %d AND point_type='%s') OR (area_nid = %d AND area_type='%s')", $nid, $type, $nid, $type);
+    db_query("DELETE FROM {simple_geo_in_area} 
+      WHERE (point_nid = %d AND point_type='%s') 
+      OR (area_nid = %d AND area_type='%s')", 
+      $id, $type, $id, $type);
   }
   
   //Refresh cache for position
   if ($op!='area') {
-    $areas = array();
-    
     if ($op!='all') {
       //Delete all position cache entries
-      db_query("DELETE FROM {simple_geo_in_area} WHERE point_nid = %d AND point_type='%s'", $nid, $type);
+      db_query("DELETE FROM {simple_geo_in_area} 
+        WHERE point_nid = %d AND point_type='%s'", $id, $type);
     }
     
     $position = simple_geo_position($id, $type);
@@ -354,7 +356,8 @@ function simple_geo_update_cache($id, $type, $op='all') {
       while ($bb_match = db_fetch_object($res)) {
         $a_coords = simple_geo_clean_wkt('polygon', $bb_match->area_wkt);
         if (simple_geo_point_in_polygon($p_array, $a_coords)) {
-          $updates[] = array($id, $type, $bb_match->nid, $bb_match->type);
+          $p = array($id, $type, $bb_match->nid, $bb_match->type);
+          $updates[join('-',$p)] = $p;
         }
       }
     }
@@ -364,7 +367,7 @@ function simple_geo_update_cache($id, $type, $op='all') {
   if ($op!='point') {
     if ($op!='all') {
       //Delete all area cache entries
-      db_query("DELETE FROM {simple_geo_in_area} WHERE area_nid = %d AND area_type='%s'", $nid, $type);
+      db_query("DELETE FROM {simple_geo_in_area} WHERE area_nid = %d AND area_type='%s'", $id, $type);
     }
     $area = simple_geo_area($nid, $type);
     if ($area) {
@@ -376,7 +379,8 @@ function simple_geo_update_cache($id, $type, $op='all') {
       while ($bb_match = db_fetch_object($res)) {
         $p_coords = simple_geo_clean_wkt('point', $bb_match->position_wkt);
         if (simple_geo_point_in_polygon($p_coords, $a_array)) {
-          $updates[] = array($bb_match->nid, $bb_match->type, $id, $type);
+          $p = array($bb_match->nid, $bb_match->type, $id, $type);
+          $updates[join('-',$p)] = $p;
         }
       }
     }
@@ -386,16 +390,17 @@ function simple_geo_update_cache($id, $type, $op='all') {
     //Add all new cache items
     $params = array();
     $query = "INSERT INTO {simple_geo_in_area}(point_nid, point_type, area_nid, area_type) VALUES";
-    foreach ($updates as $update) {
+    
+    foreach ($updates as $pk => $update) {
       $query .= "(%d, '%s', %d, '%s'),";
-      $params = array_merge($update, $update);
+      $params = array_merge($params, $update);
     }
     array_unshift($params, trim($query,','));
     call_user_func_array('db_query', $params);
     
     //Notify all modules of new spatial relationships
     $handlers = module_implements('simple_geo_inside');
-    foreach ($updates as $update) {
+    foreach ($updates as $pk => $update) {
       foreach($handlers as $module) {
         call_user_func_array($module .'_simple_geo_inside', $update);
       }
