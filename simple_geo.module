@@ -78,13 +78,10 @@ function simple_geo_user($op, &$edit, &$account, $category = NULL) {
       
       return array('simple_geo'=>$set);
     break;
-    case 'insert':
     case 'update':
       if (isset($edit['simple_geo_position'])) {
-        if (empty($edit['simple_geo_position'])) {
-          simple_geo_delete_position($account->uid, 'user');
-        }
-        else {
+        simple_geo_delete_position($account->uid, 'user');
+        if (!empty($edit['simple_geo_position'])) {
           simple_geo_set_position($account->uid, 'user', $edit['simple_geo_position']);
         }
       }
@@ -546,7 +543,7 @@ function simple_geo_point_on_vertex($point, $vertices) {
  *
  * @return void
  **/
-function simple_geo_delete_position($id) {
+function simple_geo_delete_position($id, $type) {
   db_query("DELETE FROM {simple_geo_position} WHERE nid = %d AND type = '%s'", $id, $type);
 }
 
