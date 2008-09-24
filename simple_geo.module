@@ -72,6 +72,12 @@ function simple_geo_form_alter(&$form, $form_state, $form_id) {
       '#title' => t('Use area'),
     );
     
+    $set['simple_geo_show_in_form'] = array(
+      '#type' => 'checkbox',
+      '#default_value' => variable_get('simple_geo_show_in_form_'. $type, TRUE),
+      '#title' => t('Show simple geo in node form'),
+    );
+    
     $form['simple_geo'] = $set;
   }
   else if ($form['#id'] == 'node-form'){
@@ -79,68 +85,71 @@ function simple_geo_form_alter(&$form, $form_state, $form_id) {
     global $user;
     
     if ($form_id == $node->type .'_node_form') {
-      $allow_position = variable_get('allow_position_'. $node->type, FALSE);
-      $allow_area = variable_get('allow_area_'. $node->type, FALSE);
+      $allow_editing = variable_get('simple_geo_show_in_form_'. $node->type, TRUE);
       
-      $set = array(
-        '#type' => 'item',
-        '#prefix' => '<div id="simple_geo_form">',
-        '#suffix' => '</div>',
-        '#title' => t('Position'),
-        );
-      $editing = FALSE;
-
-      if (module_exists('content')) {
-        $set['#weight'] = content_extra_field_weight($form['type']['#value'], 'simple_geo');
-      }
-
-      if ($allow_position && (user_access('edit all positions') || 
-          ($node->uid == $user->uid && user_access('edit own nodes position')))) {
-        if (!isset($node->simple_geo_position)) {
-          $position = simple_geo_guess_position($node);
-        }
-        else {
-          $position = $node->simple_geo_position;
-        }
-
-        $set['simple_geo_position'] = array(
-          '#type' => 'textfield',
+      if ($allow_editing) {
+        $allow_position = variable_get('allow_position_'. $node->type, FALSE);
+        $allow_area = variable_get('allow_area_'. $node->type, FALSE);
+        
+        $set = array(
+          '#type' => 'item',
+          '#prefix' => '<div id="simple_geo_form">',
+          '#suffix' => '</div>',
           '#title' => t('Position'),
-          '#attributes' => array('class'=>'simple-geo-position'),
-          '#default_value' => $position,
-          '#weight' => 1,
-        );
-        
-        $editing = true;
-      }
-      
-      if ($allow_area && (user_access('edit all areas') || 
-          ($node->uid == $user->uid && user_access('edit own nodes area')))) {
-        $area = '';
-        if (isset($node->simple_geo_area)) {
-          $area = $node->simple_geo_area;
+          );
+        $editing = FALSE;
+
+        if (module_exists('content')) {
+          $set['#weight'] = content_extra_field_weight($form['type']['#value'], 'simple_geo');
         }
-        
-        $set['simple_geo_area'] = array(
-          '#type' => 'textarea',
-          '#title' => t('Area'),
-          '#attributes' => array('class'=>'simple-geo-area'),
-          '#default_value' => $area,
-          '#weight' => 2,
-        );
-        
-        $editing = true;
-      }
-      
-      if ($editing) {
-        
-        $set['map_placeholder'] = array(
-          '#type' => 'markup',
-          '#value' => '<div class="map-placeholder"></div>',
-          '#weight' => -1,
-          '#after_build' => array('simple_geo_add_form_js'),
-        );
-        $form['simple_geo'] = $set;
+
+        if ($allow_position && (user_access('edit all positions') || 
+            ($node->uid == $user->uid && user_access('edit own nodes position')))) {
+          if (!isset($node->simple_geo_position)) {
+            $position = simple_geo_guess_position($node);
+          }
+          else {
+            $position = $node->simple_geo_position;
+          }
+
+          $set['simple_geo_position'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Position'),
+            '#attributes' => array('class'=>'simple-geo-position'),
+            '#default_value' => $position,
+            '#weight' => 1,
+          );
+
+          $editing = true;
+        }
+
+        if ($allow_area && (user_access('edit all areas') || 
+            ($node->uid == $user->uid && user_access('edit own nodes area')))) {
+          $area = '';
+          if (isset($node->simple_geo_area)) {
+            $area = $node->simple_geo_area;
+          }
+
+          $set['simple_geo_area'] = array(
+            '#type' => 'textarea',
+            '#title' => t('Area'),
+            '#attributes' => array('class'=>'simple-geo-area'),
+            '#default_value' => $area,
+            '#weight' => 2,
+          );
+
+          $editing = true;
+        }
+
+        if ($editing) {
+          $set['map_placeholder'] = array(
+            '#type' => 'markup',
+            '#value' => '<div class="map-placeholder"></div>',
+            '#weight' => -1,
+            '#after_build' => array('simple_geo_add_form_js'),
+          );
+          $form['simple_geo'] = $set;
+        }
       }
     }
   }
