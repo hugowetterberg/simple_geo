@@ -35,6 +35,7 @@ if (google && google.load) {
     //Create map view
     var placeholder = jQuery('.map-placeholder:first').css({'width': '100%', 'height': '400px'}).get(0);
     var map = new google.maps.Map2(placeholder);
+     map.addControl(new GSmallMapControl());
     
     //Get coordinate data
     var aCoords = jQuery('#edit-simple-geo-area').attr('value');
@@ -43,7 +44,7 @@ if (google && google.load) {
     //Center the map on the position if we have one
     var position = wkt_to_latlng(pCoords ? pCoords : (Drupal.settings.simple_geo_position ? Drupal.settings.simple_geo_position : ''));
     if (!position) {
-      position = new google.maps.LatLng(55.675455,12.59119);//Make this coordinate configurable or intelligent
+      position = new google.maps.LatLng(55.675455,12.59119);
     }
     map.setCenter(position, 13);
     
@@ -58,10 +59,6 @@ if (google && google.load) {
     }
     
     var marker = new GMarker(position, {draggable: true, icon: icon});
-    // GEvent.addListener(marker, "dragstart", function() {
-    // });
-    
-    var moved = false;
     
     //Update the position text-field on drag end
     GEvent.addListener(marker, "dragend", function() {
@@ -69,18 +66,21 @@ if (google && google.load) {
       jQuery('#edit-simple-geo-position').attr('value',wkt_coord(this.getLatLng()));
     });
     
+    //Listen for node loaded events to get default positions (used for group based position for nodes)
     jQuery(document).one('nodeLoaded', function (e, nid) {
-      if (!moved) {
+      var curr_pos = jQuery('#edit-simple-geo-position').attr('value');
+      if (!curr_pos.length) {
         Drupal.service('node.get', 
           [
             nid,
             ['simple_geo_position']
           ], 
           function (res, err) {
-            if (res && res.simple_geo_position && !moved) {
+            if (res && res.simple_geo_position) {
               var position = wkt_to_latlng(res.simple_geo_position);
               map.setCenter(position, 13);
               marker.setLatLng(position);
+              jQuery('#edit-simple-geo-position').attr('value', res.simple_geo_position);
             }
           }
         );
