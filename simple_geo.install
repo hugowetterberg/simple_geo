@@ -45,8 +45,14 @@ function simple_geo_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      'type' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'default' => 'node',
+        'not null' => TRUE,
+      )
     ),
-    'primary key' => array('nid'),
+    'primary key' => array('nid','type'),
   );
   
   $schema['simple_geo_area'] = array(
@@ -57,8 +63,14 @@ function simple_geo_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      'type' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'default' => 'node',
+        'not null' => TRUE,
+      )
     ),
-    'primary key' => array('nid'),
+    'primary key' => array('nid','type'),
   );
   
   $schema['simple_geo_in_area'] = array(
@@ -69,19 +81,76 @@ function simple_geo_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      'point_type' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'default' => 'node',
+        'not null' => TRUE,
+      ),
       'area_nid' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
       ),
+      'area_type' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'default' => 'node',
+        'not null' => TRUE,
+      )
     ),
     'indexes' => array(
-      'point' => array('point_nid'),
-      'area' => array('area_nid'),
+      'point' => array('point_nid','point_type'),
+      'area' => array('area_nid','area_type'),
     ),
-    'primary key' => array('point_nid', 'area_nid'),
+    'primary key' => array('point_nid', 'point_type', 'area_nid', 'area_type'),
   );
   
   return $schema;
+}
+
+function simple_geo_update_1() {
+  $ret = array();
+  //Update position table
+  db_drop_primary_key($ret, 'simple_geo_position');
+  db_add_field($ret, 'simple_geo_position', 'type', array(
+    'type' => 'varchar',
+    'length' => 32,
+    'default' => 'node',
+    'not null' => TRUE,
+  ));
+  db_add_primary_key($ret, 'simple_geo_position', array('nid','type'));
+  
+  //Update area table
+  db_drop_primary_key($ret, 'simple_geo_area');
+  db_add_field($ret, 'simple_geo_area', 'type', array(
+    'type' => 'varchar',
+    'length' => 32,
+    'default' => 'node',
+    'not null' => TRUE,
+  ));
+  db_add_primary_key($ret, 'simple_geo_area', array('nid','type'));
+  
+  //Update simple_geo_in_area table
+  db_drop_primary_key($ret, 'simple_geo_in_area');
+  db_drop_index($ret, 'simple_geo_in_area', 'point');
+  db_drop_index($ret, 'simple_geo_in_area', 'area');
+  db_add_field($ret, 'simple_geo_in_area', 'point_type', array(
+    'type' => 'varchar',
+    'length' => 32,
+    'default' => 'node',
+    'not null' => TRUE,
+  ));
+  db_add_field($ret, 'simple_geo_in_area', 'area_type', array(
+    'type' => 'varchar',
+    'length' => 32,
+    'default' => 'node',
+    'not null' => TRUE,
+  ));
+  db_add_index($ret, 'simple_geo_in_area', 'point', array('point_nid','point_type'));
+  db_add_index($ret, 'simple_geo_in_area', 'area', array('area_nid','area_type'));
+  db_add_primary_key($ret, 'simple_geo_in_area', array('point_nid', 'point_type', 'area_nid', 'area_type'));
+  
+  return $ret;
 }

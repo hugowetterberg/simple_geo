@@ -156,7 +156,7 @@ function simple_geo_form_alter(&$form, $form_state, $form_id) {
 }
 
 function simple_geo_add_form_js($form) {
-  drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/node_edit.js', 'module', 'header');
+  drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/edit.js', 'module', 'header');
   return $form;
 }
 
@@ -188,8 +188,8 @@ function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   
   switch($op) {
     case 'delete':
-      simple_geo_delete_position($node->nid);
-      simple_geo_delete_area($node->nid);
+      simple_geo_delete_position($node->nid, 'node');
+      simple_geo_delete_area($node->nid, 'node');
       break;
     case 'update':
     case 'insert':
@@ -197,22 +197,22 @@ function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       
       if (!empty($node->simple_geo_position) && $allow_position && (user_access('edit all positions') || 
           ($node->uid == $user->uid && user_access('edit own node position')))) {
-        simple_geo_set_position($node->nid, $node->simple_geo_position);
+        simple_geo_set_position($node->nid, 'node', $node->simple_geo_position);
       }
       
       if (!empty($node->simple_geo_area) && $allow_area && (user_access('edit all areas') || 
           ($node->uid == $user->uid && user_access('edit own node area')))) {
-        simple_geo_set_area($node->nid, $node->simple_geo_area);
+        simple_geo_set_area($node->nid, 'node', $node->simple_geo_area);
       }
       
-      simple_geo_update_cache($node->nid);
+      simple_geo_update_cache($node->nid, 'node');
       break;
     case 'load':
       if ($allow_position) {
-        $node->simple_geo_position = simple_geo_position($node->nid);
+        $node->simple_geo_position = simple_geo_position($node->nid, 'node');
       }
       if ($allow_area) {
-        $node->simple_geo_area = simple_geo_area($node->nid);
+        $node->simple_geo_area = simple_geo_area($node->nid, 'node');
       }
       break;
     case 'view':
@@ -240,28 +240,30 @@ function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
 }
 
 /**
- * Gets the position of a node. 
+ * Gets the position of a object. 
  *
  * @param int $nid The id of the node
+ * @param string $type The type of the object
  *
  * @return string The point as a coordinate pair in the same format as WKT
  **/
-function simple_geo_position($nid) {
-  $res = db_query("SELECT AsText(position) FROM {simple_geo_position} WHERE nid = %d", $nid);
+function simple_geo_position($id, $type) {
+  $res = db_query("SELECT AsText(position) FROM {simple_geo_position} WHERE nid = %d AND type='%s'", $id, $type);
   if ($wkt = db_result($res)) {
     return simple_geo_clean_wkt('point', $wkt);
   }
 }
 
 /**
- * Gets the area of a node. 
+ * Gets the area of a object. 
  *
- * @param int $nid The id of the node
+ * @param int $nid The id of the object
+ * @param string $type The type of the object
  *
  * @return string The vertexes of the polygon as coordinate pairs in the same format as WKT
  **/
-function simple_geo_area($nid) {
-  $res = db_query("SELECT AsText(area) FROM {simple_geo_area} WHERE nid = %d", $nid);
+function simple_geo_area($id, $type) {
+  $res = db_query("SELECT AsText(area) FROM {simple_geo_area} WHERE nid = %d", $id, $type);
   if ($wkt = db_result($res)) {
     return simple_geo_clean_wkt('polygon', $wkt);
   }
@@ -275,31 +277,33 @@ function simple_geo_area($nid) {
  *
  * @return void
  **/
-function simple_geo_update_cache($nid, $op='all') {
+function simple_geo_update_cache($id, $type, $op='all') {
   $updates = array();
   
   if ($op=='all') {
     //Delete all cache entries
-    db_query("DELETE FROM {simple_geo_in_area} WHERE point_nid = %d OR area_nid = %d", $nid, $nid);
+    db_query("DELETE FROM {simple_geo_in_area} WHERE (point_nid = %d AND point_type='%s') OR (area_nid = %d AND area_type='%s')", $nid, $type, $nid, $type);
   }
   
   //Refresh cache for position
   if ($op!='area') {
+    $areas = array();
+    
     if ($op!='all') {
       //Delete all position cache entries
-      db_query("DELETE FROM {simple_geo_in_area} WHERE point_nid = %d", $nid);
+      db_query("DELETE FROM {simple_geo_in_area} WHERE point_nid = %d AND point_type='%s'", $nid, $type);
     }
-    $position = simple_geo_position($nid);
+    
+    $position = simple_geo_position($id);
     if ($position) {
       $p_array = simple_geo_coordinates_to_array($position);
-      $res = db_query("SELECT nid, AsText(area) as area_wkt 
+      $res = db_query("SELECT nid, type, AsText(area) as area_wkt 
         FROM {simple_geo_area}
         WHERE Contains(area, GeomFromText('%s'))", simple_geo_to_wkt('point', $position));
-      $areas = array();
       while ($bb_match = db_fetch_object($res)) {
         $a_coords = simple_geo_clean_wkt('polygon', $bb_match->area_wkt);
         if (simple_geo_point_in_polygon($p_array, $a_coords)) {
-          $updates[$nid] = $bb_match->nid;
+          $updates[] = array($id, $type, $bb_match->nid, $bb_match->type);
         }
       }
     }
@@ -309,38 +313,40 @@ function simple_geo_update_cache($nid, $op='all') {
   if ($op!='point') {
     if ($op!='all') {
       //Delete all area cache entries
-      db_query("DELETE FROM {simple_geo_in_area} WHERE area_nid = %d", $nid);
+      db_query("DELETE FROM {simple_geo_in_area} WHERE area_nid = %d AND area_type='%s'", $nid, $type);
     }
     $area = simple_geo_area($nid);
     if ($area) {
       $a_array = simple_geo_coordinates_to_array($area);
-      $res = db_query("SELECT nid, AsText(position) as position_wkt 
+      $res = db_query("SELECT nid, type, AsText(position) as position_wkt 
         FROM {simple_geo_position}
         WHERE Contains(GeomFromText('%s'), position)", simple_geo_to_wkt('polygon', $area));
       $points = array();
       while ($bb_match = db_fetch_object($res)) {
         $p_coords = simple_geo_clean_wkt('point', $bb_match->position_wkt);
         if (simple_geo_point_in_polygon($p_coords, $a_array)) {
-          $updates[$bb_match->nid] = $nid;
+          $updates[] = array($bb_match->nid, $bb_match->type, $id, $type);
         }
       }
     }
   }
   
-  
   if(count($updates)) {
     //Add all new cache items
-    $query = "INSERT INTO {simple_geo_in_area}(point_nid, area_nid) VALUES";
-    foreach ($updates as $point => $area) {
-      $query .= '('. $point .','. $area .'),';
+    $params = array();
+    $query = "INSERT INTO {simple_geo_in_area}(point_nid, point_type, area_nid, area_type) VALUES";
+    foreach ($updates as $update) {
+      $query .= "(%d, '%s', %d, '%s'),";
+      $params = array_merge($update, $update);
     }
-    db_query(trim($query,','));
+    array_unshift($params, trim($query,','));
+    call_user_func_array('db_query', $params);
     
     //Notify all modules of new spatial relationships
     $handlers = module_implements('simple_geo_inside');
-    foreach ($updates as $point => $area) {
+    foreach ($updates as $update) {
       foreach($handlers as $module) {
-        call_user_func($module .'_simple_geo_inside', $point, $area);
+        call_user_func_array($module .'_simple_geo_inside', $update);
       }
     }
   }
@@ -354,8 +360,9 @@ function simple_geo_update_cache($nid, $op='all') {
  *
  * @return void
  **/
-function simple_geo_contains($area_nid, $position_nid) {
-  $res = db_query("SELECT COUNT(*) FROM {simple_geo_in_area} WHERE point_nid=%d AND area_nid=%d", $position_nid, $area_nid);
+function simple_geo_contains($area_nid, $area_type, $position_nid, $position_type) {
+  $res = db_query("SELECT COUNT(*) FROM {simple_geo_in_area} WHERE point_nid=%d AND point_type='%s' AND area_nid=%d AND area_type='%s'", 
+    $position_nid, $position_type, $area_nid, $area_type);
   return db_result($res)==1;
 }
 
@@ -368,7 +375,8 @@ function simple_geo_contains($area_nid, $position_nid) {
 function simple_geo_position_db_info() {
   return array(
     'table' => 'simple_geo_position',
-    'node' => 'nid',
+    'id' => 'nid',
+    'type' => 'type',
     'geometry' => 'position',
   );
 }
@@ -382,7 +390,8 @@ function simple_geo_position_db_info() {
 function simple_geo_area_db_info() {
   return array(
     'table' => 'simple_geo_area',
-    'node' => 'nid',
+    'id' => 'nid',
+    'type' => 'type',
     'geometry' => 'area',
   );
 }
@@ -397,7 +406,9 @@ function simple_geo_cache_db_info() {
   return array(
     'table' => 'simple_geo_in_area',
     'position' => 'point_nid',
+    'position_type' => 'point_type',
     'area' => 'area_nid',
+    'area_type' => 'area_type',
   );
 }
 
@@ -481,8 +492,8 @@ function simple_geo_point_on_vertex($point, $vertices) {
  *
  * @return void
  **/
-function simple_geo_delete_position($nid) {
-  db_query("DELETE FROM {simple_geo_position} WHERE nid = %d", $nid);
+function simple_geo_delete_position($id) {
+  db_query("DELETE FROM {simple_geo_position} WHERE nid = %d AND type = '%s'", $id, $type);
 }
 
 /**
@@ -493,8 +504,8 @@ function simple_geo_delete_position($nid) {
  * 
  * @return void
  **/
-function simple_geo_delete_area($nid) {
-  db_query("DELETE FROM {simple_geo_area} WHERE nid = %d", $nid);
+function simple_geo_delete_area($id, $type) {
+  db_query("DELETE FROM {simple_geo_area} WHERE nid = %d AND type = '%s'", $id, $type);
 }
 
 /**
@@ -505,10 +516,10 @@ function simple_geo_delete_area($nid) {
  *
  * @return void
  **/
-function simple_geo_set_position($nid, $position) {
-  simple_geo_delete_position($nid);
-  db_query("INSERT INTO {simple_geo_position}(nid, position)
-    VALUES(%d, GeomFromText('%s'))", $nid, simple_geo_to_wkt('point', $position));
+function simple_geo_set_position($id, $type, $position) {
+  simple_geo_delete_position($id, $type);
+  db_query("INSERT INTO {simple_geo_position}(nid, type, position)
+    VALUES(%d, '%s', GeomFromText('%s'))", $id, $type, simple_geo_to_wkt('point', $position));
 }
 
 /**
@@ -519,10 +530,10 @@ function simple_geo_set_position($nid, $position) {
  *
  * @return void
  **/
-function simple_geo_set_area($nid, $area) {
-  simple_geo_delete_area($nid);
+function simple_geo_set_area($id, $type, $area) {
+  simple_geo_delete_area($id);
   db_query("INSERT INTO {simple_geo_area}(nid, area)
-    VALUES(%d, GeomFromText('%s'))", $nid, simple_geo_to_wkt('polygon', $area));
+    VALUES(%d, '%s', GeomFromText('%s'))", $id, $type, simple_geo_to_wkt('polygon', $area));
 }
 
 
