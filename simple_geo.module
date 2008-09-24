@@ -582,7 +582,7 @@ function simple_geo_set_position($id, $type, $position) {
  * @return void
  **/
 function simple_geo_set_area($id, $type, $area) {
-  simple_geo_delete_area($id);
+  simple_geo_delete_area($id, $type);
   db_query("INSERT INTO {simple_geo_area}(nid, area)
     VALUES(%d, '%s', GeomFromText('%s'))", $id, $type, simple_geo_to_wkt('polygon', $area));
 }
