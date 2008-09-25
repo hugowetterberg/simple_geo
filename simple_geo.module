@@ -78,6 +78,9 @@ function simple_geo_user($op, &$edit, &$account, $category = NULL) {
       
       return array('simple_geo'=>$set);
     break;
+    case 'load':
+      $account->simple_geo_position = simple_geo_position($account->uid, 'user');
+    break;
     case 'update':
       if (isset($edit['simple_geo_position'])) {
         simple_geo_delete_position($account->uid, 'user');
