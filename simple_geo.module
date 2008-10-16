@@ -6,6 +6,25 @@ define('SIMPLE_GEO_COORDINATE_SEPARATOR', ' ');
 
 require('includes/simple_geo_themeable_functions.php');
 
+function simple_geo_init() {
+  $def_pos = variable_get('simple_geo_default_position', 0);
+  if ($def_pos) {
+    drupal_add_js(array(
+      'simple_geo_default_position' => $def_pos,
+    ), 'setting');
+  }
+  
+  $api_key = variable_get('gmaps_api_key', False);
+  if ($api_key) {
+    if (variable_get('simple_geo_use_microformat_map',1)) {
+      drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/micromap.js', 'module', 'header');
+    }
+    if (variable_get('simple_geo_add_google_jsapi',1)) {
+      drupal_set_html_head('<script type="text/javascript" src="http://www.google.com/jsapi?key='. $api_key .'"></script>');
+    }
+  }
+}
+
 /**
  * Implementation of hook_menu
  *
@@ -23,6 +42,17 @@ function simple_geo_menu() {
     'file' => 'includes/simple_geo_fallback_functions.php',
     'weight' => 0,
   );
+  
+  $items['admin/settings/simple-geo'] = array(
+    'title' => t('Simple geo configuration'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('simple_geo_settings'),
+    'access arguments' => array('administer simple geo'),
+    'file' => 'simple_geo_admin.inc.php',
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => 0,
+  );
+  
   return $items;
 }
 
@@ -33,7 +63,7 @@ function simple_geo_menu() {
  **/
 function simple_geo_perm() {
   return array(
-    'edit own nodes area', 'edit own nodes position', 'edit all areas', 'edit all positions'
+    'edit own nodes area', 'edit own nodes position', 'edit all areas', 'edit all positions', 'administer simple geo'
   );
 }
 
@@ -273,18 +303,40 @@ function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       $map_view = '';
       if (!empty($node->simple_geo_position)) {
         $coords = explode(' ', $node->simple_geo_position);
-        $map_view .= '<div class="node-map"><a rel="map" title="'. 
-          t('Map for @name', array('@name'=>$node->title)) .'" href="'. url('node/'. $node->nid .'/map/') .'">'. 
-          t('Show on map') .'</a></div>';
-        $map_view .= '<div class="geo"><span class="latitude">'. $coords[0] .'</span><span class="longitude">'. $coords[1] .'</span></div>';
+        
+        $map_link = variable_get('simple_geo_show_map_link','always');
+        switch ($map_link) {
+          case 'always':
+            $show_map_link = True;
+          break;
+          case 'teaser':
+            $show_map_link = $a3;
+          break;
+          case 'full':
+            $show_map_link = !$a3;
+          break;
+          case 'never':
+            $show_map_link = False;
+          break;
+        }
+        
+        if ($show_map_link) {
+          $map_view .= '<div class="node-map"><a rel="map" title="'. 
+            t('Map for @name', array('@name'=>$node->title)) .'" href="'. url('node/'. $node->nid .'/map/') .'">'. 
+            t('Show on map') .'</a></div>';
+        }
+        
+        if (variable_get('simple_geo_add_microformat_tag',1)) {
+          $map_view .= '<div class="geo"><span class="latitude">'. $coords[0] .'</span><span class="longitude">'. $coords[1] .'</span></div>';
+        }
       }
       
-      if (!empty($node->simple_geo_area)) {
+      if (!empty($node->simple_geo_area) && variable_get('simple_geo_add_microformat_tag',1)) {
         $map_view .= '<script type="text/javascript">var node_'. $node->nid .'_position="'. $node->simple_geo_position .'";'.
           'var node_'. $node->nid .'_area="'. $node->simple_geo_area .'";</script>';
       }
       
-      $node->content[] = array(
+      $node->content['simple_geo'] = array(
         '#weight' => 50,
         '#value' => $map_view,
       );

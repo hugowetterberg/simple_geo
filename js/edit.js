@@ -39,10 +39,10 @@ if (google && google.load) {
     
     //Get coordinate data
     var aCoords = jQuery('#edit-simple-geo-area').attr('value');
-    var pCoords = jQuery('#edit-simple-geo-position').attr('value');
+    var pCoords = jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value');
     
     //Center the map on the position if we have one
-    var position = wkt_to_latlng(pCoords ? pCoords : (Drupal.settings.simple_geo_position ? Drupal.settings.simple_geo_position : ''));
+    var position = wkt_to_latlng(pCoords ? pCoords : (Drupal.settings.simple_geo_default_position ? Drupal.settings.simple_geo_default_position : ''));
     if (!position) {
       position = new google.maps.LatLng(55.675455,12.59119);
     }
@@ -62,7 +62,7 @@ if (google && google.load) {
     
     //Update the position text-field on drag end
     GEvent.addListener(marker, "dragend", function() {
-      jQuery('#edit-simple-geo-position').attr('value',wkt_coord(this.getLatLng()));
+      jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value',wkt_coord(this.getLatLng()));
     });
     
     //Listen for node loaded events to get default positions (used for group based position for nodes)
@@ -79,7 +79,7 @@ if (google && google.load) {
               var position = wkt_to_latlng(res.simple_geo_position);
               map.setCenter(position, 13);
               marker.setLatLng(position);
-              jQuery('#edit-simple-geo-position').attr('value', res.simple_geo_position);
+              jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value', res.simple_geo_position);
             }
           }
         );
