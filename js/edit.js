@@ -71,7 +71,9 @@ if (google && google.load) {
     var resetDesc = Drupal.t('Remove position (Resets the marker to default position)');
     var marker = new GMarker(position, {draggable: true, icon: icon});
     $('<a title="' + resetDesc + '">' + resetDesc + '</a>').insertAfter(placeholder).click(function(){
-      marker.setLatLng(default_position());
+      var def = default_position();
+      marker.setLatLng(def);
+      map.setCenter(def, 13);
       jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value', '');
     });
     
