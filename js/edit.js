@@ -27,6 +27,13 @@ if (google && google.load) {
     },
     wkt_coord = function(ll) {
       return ll.lat() + ' ' + ll.lng();
+    },
+    default_position = function() {
+      var def = wkt_to_latlng(Drupal.settings.simple_geo_default_position ? Drupal.settings.simple_geo_default_position : '');
+      if (!def) {
+        def = new google.maps.LatLng(55.675455,12.59119);
+      }
+      return def;
     };
     
     jQuery('#edit-simple-geo-position-wrapper').hide().length;
@@ -42,9 +49,12 @@ if (google && google.load) {
     var pCoords = jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value');
     
     //Center the map on the position if we have one
-    var position = wkt_to_latlng(pCoords ? pCoords : (Drupal.settings.simple_geo_default_position ? Drupal.settings.simple_geo_default_position : ''));
+    var position = default_position();
+    if (pCoords) {
+      position = wkt_to_latlng(pCoords);
+    }
     if (!position) {
-      position = new google.maps.LatLng(55.675455,12.59119);
+      position = default_position();
     }
     map.setCenter(position, 13);
     
@@ -58,11 +68,16 @@ if (google && google.load) {
       icon.image = Drupal.settings.user_map.favicon_path +'/default/0/marker.png';
     }
     
+    var resetDesc = Drupal.t('Remove position (Resets the marker to default position)');
     var marker = new GMarker(position, {draggable: true, icon: icon});
+    $('<a title="' + resetDesc + '">' + resetDesc + '</a>').insertAfter(placeholder).click(function(){
+      marker.setLatLng(default_position());
+      jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value', '');
+    });
     
     //Update the position text-field on drag end
     GEvent.addListener(marker, "dragend", function() {
-      jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value',wkt_coord(this.getLatLng()));
+      jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value', wkt_coord(this.getLatLng()));
     });
     
     //Listen for node loaded events to get default positions (used for group based position for nodes)
