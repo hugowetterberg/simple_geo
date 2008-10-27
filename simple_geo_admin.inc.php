@@ -2,7 +2,7 @@
 
 // $Id$
 
-function simple_geo_settings() {
+function _simple_geo_settings() {
   $form = array();
   
   $form['position_set'] = array(

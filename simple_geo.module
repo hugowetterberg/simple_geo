@@ -6,6 +6,7 @@ define('SIMPLE_GEO_COORDINATE_SEPARATOR', ' ');
 
 require('includes/simple_geo_themeable_functions.php');
 
+
 function simple_geo_init() {
   $def_pos = variable_get('simple_geo_default_position', 0);
   if ($def_pos) {
@@ -30,30 +31,63 @@ function simple_geo_init() {
  *
  * @return void
  **/
-function simple_geo_menu() {
+function simple_geo_menu($may_cache) {
   $items = array();
-  $items['node/%node/map'] = array(
-    'title' => t('Map'),
-    'page callback' => 'simple_geo_view_position',
-    'page arguments' => array(1),
-    'access callback' => 'node_access',
-    'access arguments' => array('view', 1),
-    'type' => MENU_CALLBACK,
-    'file' => 'includes/simple_geo_fallback_functions.php',
-    'weight' => 0,
-  );
-  
-  $items['admin/settings/simple-geo'] = array(
-    'title' => t('Simple geo configuration'),
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('simple_geo_settings'),
-    'access arguments' => array('administer simple geo'),
-    'file' => 'simple_geo_admin.inc.php',
-    'type' => MENU_NORMAL_ITEM,
-    'weight' => 0,
-  );
+
+  if ($may_cache) {
+    $items[] = array(
+      'path' => 'admin/settings/simple-geo',
+      'title' => t('Simple geo configuration'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('simple_geo_settings'),
+      'access' => user_access('administer simple geo'),
+      'type' => MENU_NORMAL_ITEM,
+      'weight' => 0,
+    );
+  }
+  else {
+    if (arg(0) == 'node' && is_numeric(arg(1))) {
+      $node = node_load(arg(1));
+      if ($node->nid) {
+        $items[] = array(
+          'path' => 'node/'. arg(1) .'/map', 
+          'title' => t('Map'),
+          'callback' => 'simple_geo_view_position',
+          'access' => node_access('view', $node),
+          'weight' => 1,
+          'type' => MENU_LOCAL_TASK
+        );
+      }
+    }
+  }
   
   return $items;
+}
+
+/**
+ * Wrapper to lazy-load the admin code when needed
+ *
+ * @return array Settings form
+ **/
+function simple_geo_settings() {
+  require('simple_geo_admin.inc.php');
+  return _simple_geo_settings();
+}
+
+/**
+ * Wrapper to lazy-load the fallback code when needed
+ *
+ * @return string Content
+ **/
+function simple_geo_view_position() {
+  $node = node_load(arg(1));
+  if ($node) {
+    require('includes/simple_geo_fallback_functions.php');
+    return _simple_geo_view_position($node);
+  }
+  else {
+    drupal_not_found();
+  }
 }
 
 /**
@@ -135,7 +169,7 @@ function simple_geo_user($op, &$edit, &$account, $category = NULL) {
  *
  * @return void
  **/
-function simple_geo_form_alter(&$form, $form_state, $form_id) {
+function simple_geo_form_alter(&$form_id, &$form) {
   
   if ($form_id == 'node_type_form') {
     $type = $form['#node_type']->type;
@@ -182,10 +216,6 @@ function simple_geo_form_alter(&$form, $form_state, $form_id) {
           '#title' => t('Position'),
         );
         $editing = FALSE;
-
-        if (module_exists('content')) {
-          $set['#weight'] = content_extra_field_weight($form['type']['#value'], 'simple_geo');
-        }
 
         if ($allow_position && (user_access('edit all positions') || 
             ($node->uid == $user->uid && user_access('edit own nodes position')))) {
@@ -322,7 +352,7 @@ function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
         
         if ($show_map_link) {
           $map_view .= '<div class="node-map"><a rel="map" title="'. 
-            t('Map for @name', array('@name'=>$node->title)) .'" href="'. url('node/'. $node->nid .'/map/') .'">'. 
+            t('Map for @name', array('@name'=>$node->title)) .'" href="'. url('node/'. $node->nid) .'/map">'. 
             t('Show on map') .'</a></div>';
         }
         

@@ -1,20 +1,6 @@
 <?php
 
 /**
- * Implementation of hook_theme
- *
- * @return array
- * @author Hugo Wetterberg
- **/
-function simple_geo_theme($existing, $type, $theme, $path) {
-  return array(
-    'geo_meta_tags' => array(
-      'arguments' => array('node' => NULL),
-    ),
-  );
-}
-
-/**
  * Theme function that generates html meta tags
  * from the geo data of a node
  * 

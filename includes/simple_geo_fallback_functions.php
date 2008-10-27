@@ -1,7 +1,6 @@
 <?php
 
-function simple_geo_view_position($node) {
-  
+function _simple_geo_view_position($node) {
   drupal_set_title(t('Map for @name', array('@name'=>$node->title)));
   
   if(empty($node->simple_geo_position) && empty($node->simple_geo_area)) {

@@ -3,13 +3,11 @@
 
 /**
  * Install hook for simple geo
- * We have to add our spatial columns manually in the install because the are unsupported by
- * the schema api
  *
  * @return void
  **/
 function simple_geo_install() {
-  drupal_install_schema('simple_geo');
+  simple_geo_create_schema();
   
   db_query("ALTER TABLE {simple_geo_area} 
     ADD COLUMN area POLYGON NOT NULL, 
@@ -26,131 +24,39 @@ function simple_geo_install() {
  * @return void
  **/
 function simple_geo_uninstall() {
-  drupal_uninstall_schema('simple_geo');
+  db_query("DROP TABLE {simple_geo_in_area}");
+  db_query("DROP TABLE {simple_geo_position}");
+  db_query("DROP TABLE {simple_geo_area}");
 }
 
 /**
  * The base scheme for simple geo
- * We have to add our spatial columns manually in the install because the are unsupported by
- * the schema api
  *
  * @return array The database schema for simple_geo
  **/
-function simple_geo_schema() {
-  $schema['simple_geo_position'] = array(
-    'fields' => array(
-      'nid' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
-      ),
-      'type' => array(
-        'type' => 'varchar',
-        'length' => 32,
-        'default' => 'node',
-        'not null' => TRUE,
-      )
-    ),
-    'primary key' => array('nid','type'),
-  );
+function simple_geo_create_schema() {
+  db_query("CREATE TABLE {simple_geo_position} (
+    nid INT UNSIGNED NOT NULL DEFAULT 0,
+    type VARCHAR(32) NOT NULL DEFAULT 'node',
+    CONSTRAINT pk_{simple_geo_position}
+      PRIMARY KEY (nid, type)
+  )");
   
-  $schema['simple_geo_area'] = array(
-    'fields' => array(
-      'nid' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
-      ),
-      'type' => array(
-        'type' => 'varchar',
-        'length' => 32,
-        'default' => 'node',
-        'not null' => TRUE,
-      )
-    ),
-    'primary key' => array('nid','type'),
-  );
+  db_query("CREATE TABLE {simple_geo_area} (
+    nid INT UNSIGNED NOT NULL DEFAULT 0,
+    type VARCHAR(32) NOT NULL DEFAULT 'node',
+    CONSTRAINT pk_{simple_geo_area}
+      PRIMARY KEY (nid, type)
+  )");
   
-  $schema['simple_geo_in_area'] = array(
-    'fields' => array(
-      'point_nid' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
-      ),
-      'point_type' => array(
-        'type' => 'varchar',
-        'length' => 32,
-        'default' => 'node',
-        'not null' => TRUE,
-      ),
-      'area_nid' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
-      ),
-      'area_type' => array(
-        'type' => 'varchar',
-        'length' => 32,
-        'default' => 'node',
-        'not null' => TRUE,
-      )
-    ),
-    'indexes' => array(
-      'point' => array('point_nid','point_type'),
-      'area' => array('area_nid','area_type'),
-    ),
-    'primary key' => array('point_nid', 'point_type', 'area_nid', 'area_type'),
-  );
-  
-  return $schema;
-}
-
-function simple_geo_update_1() {
-  $ret = array();
-  //Update position table
-  db_drop_primary_key($ret, 'simple_geo_position');
-  db_add_field($ret, 'simple_geo_position', 'type', array(
-    'type' => 'varchar',
-    'length' => 32,
-    'default' => 'node',
-    'not null' => TRUE,
-  ));
-  db_add_primary_key($ret, 'simple_geo_position', array('nid','type'));
-  
-  //Update area table
-  db_drop_primary_key($ret, 'simple_geo_area');
-  db_add_field($ret, 'simple_geo_area', 'type', array(
-    'type' => 'varchar',
-    'length' => 32,
-    'default' => 'node',
-    'not null' => TRUE,
-  ));
-  db_add_primary_key($ret, 'simple_geo_area', array('nid','type'));
-  
-  //Update simple_geo_in_area table
-  db_drop_primary_key($ret, 'simple_geo_in_area');
-  db_drop_index($ret, 'simple_geo_in_area', 'point');
-  db_drop_index($ret, 'simple_geo_in_area', 'area');
-  db_add_field($ret, 'simple_geo_in_area', 'point_type', array(
-    'type' => 'varchar',
-    'length' => 32,
-    'default' => 'node',
-    'not null' => TRUE,
-  ));
-  db_add_field($ret, 'simple_geo_in_area', 'area_type', array(
-    'type' => 'varchar',
-    'length' => 32,
-    'default' => 'node',
-    'not null' => TRUE,
-  ));
-  db_add_index($ret, 'simple_geo_in_area', 'point', array('point_nid','point_type'));
-  db_add_index($ret, 'simple_geo_in_area', 'area', array('area_nid','area_type'));
-  db_add_primary_key($ret, 'simple_geo_in_area', array('point_nid', 'point_type', 'area_nid', 'area_type'));
-  
-  return $ret;
+  db_query("CREATE TABLE {simple_geo_in_area} (
+    point_nid INT UNSIGNED NOT NULL DEFAULT 0,
+    point_type VARCHAR(32) NOT NULL DEFAULT 'node',
+    area_nid INT UNSIGNED NOT NULL DEFAULT 0,
+    area_type VARCHAR(32) NOT NULL DEFAULT 'node',
+    INDEX idx_{simple_geo_in_area}_point(point_nid, point_type),
+    INDEX idx_{simple_geo_in_area}_area(area_nid, area_type),
+    CONSTRAINT pk_{simple_geo_in_area}
+      PRIMARY KEY (point_nid, point_type, area_nid, area_type)
+  )");
 }

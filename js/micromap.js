@@ -1,6 +1,7 @@
 // $Id$
 
 if (google && google.load) {
+  if (!Drupal['t']) Drupal.t = function (m) { return m; };
   google.load('maps', '2.x');
   
   $(document).ready(function(){
