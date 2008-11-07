@@ -55,7 +55,7 @@ function simple_geo_menu($may_cache) {
           'callback' => 'simple_geo_view_position',
           'access' => node_access('view', $node),
           'weight' => 1,
-          'type' => MENU_LOCAL_TASK
+          'type' => variable_get('simple_geo_add_map_as_local_task',1) ? MENU_LOCAL_TASK : MENU_CALLBACK,
         );
       }
     }

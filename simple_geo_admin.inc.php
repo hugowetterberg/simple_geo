@@ -34,6 +34,12 @@ function _simple_geo_settings() {
     '#default_value' => variable_get('simple_geo_show_map_link','always'),
   );
   
+  $form['simple_geo_add_map_as_local_task'] = array(
+    '#type' => 'checkbox',
+    '#default_value' => variable_get('simple_geo_add_map_as_local_task',1),
+    '#title' => t('Add the static map as a local task (a tab)'),
+  );
+  
   $form['simple_geo_add_microformat_tag'] = array(
     '#type' => 'checkbox',
     '#default_value' => variable_get('simple_geo_add_microformat_tag',1),
