@@ -43,7 +43,7 @@ if (google && google.load) {
         GEvent.addListener(marker, "click", function(geo) {
           return function() {
             var level = geo.parentNode;
-            while (!(has_title = $(level).children('.title').length) && level.parentNode) {
+            while (!(has_title = $(level).children('.title,.views-field-title').length) && level.parentNode) {
               level = level.parentNode;
             }
             if(!has_title) level = geo.parentNode;
@@ -56,8 +56,10 @@ if (google && google.load) {
             $(level).addClass('micromap-highlight');
             map_highlight = level;
             
-            $(level).animate({ backgroundColor: "#FFFFAA" }, 1000, function(){
-              $(this).animate({ backgroundColor: "#FFFFFF" }, 1000);
+            $(level).css({ backgroundImage: 'none' }).animate({ backgroundColor: "#FFFFAA" }, 1000, function(){
+              $(this).animate({ backgroundColor: "#FFFFFF" }, 1000, function(){
+                $(this).css({ backgroundImage: '', backgroundColor: '' });
+              });
             });
           };
         }(positions.get(i)));
