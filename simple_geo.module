@@ -13,7 +13,7 @@ function simple_geo_init() {
       'simple_geo_default_position' => $def_pos,
     ), 'setting');
   }
-  
+
   $api_key = variable_get('gmaps_api_key', False);
   if ($api_key) {
     if (variable_get('simple_geo_use_microformat_map',1)) {
@@ -42,7 +42,7 @@ function simple_geo_menu() {
     'file' => 'includes/simple_geo_fallback_functions.php',
     'weight' => 0,
   );
-  
+
   $items['admin/settings/simple-geo'] = array(
     'title' => t('Simple geo configuration'),
     'page callback' => 'drupal_get_form',
@@ -52,7 +52,7 @@ function simple_geo_menu() {
     'type' => MENU_NORMAL_ITEM,
     'weight' => 0,
   );
-  
+
   return $items;
 }
 
@@ -88,7 +88,7 @@ function simple_geo_user($op, &$edit, &$account, $category = NULL) {
         '#title' => t('Position'),
         '#weight' => -20,
       );
-      
+
       $position = simple_geo_position($account->uid, 'user');
 
       $set['simple_geo_position'] = array(
@@ -105,7 +105,7 @@ function simple_geo_user($op, &$edit, &$account, $category = NULL) {
         '#weight' => -1,
         '#after_build' => array('simple_geo_add_form_js'),
       );
-      
+
       return array('simple_geo'=>$set);
     break;
     case 'load':
@@ -118,7 +118,7 @@ function simple_geo_user($op, &$edit, &$account, $category = NULL) {
           simple_geo_set_position($account->uid, 'user', $edit['simple_geo_position']);
         }
       }
-      
+
       //Make sure that we've cleared out all our stuff
       //to prevent user data pollution
       foreach ($edit as $key => $value) {
@@ -136,45 +136,45 @@ function simple_geo_user($op, &$edit, &$account, $category = NULL) {
  * @return void
  **/
 function simple_geo_form_alter(&$form, $form_state, $form_id) {
-  
+
   if ($form_id == 'node_type_form') {
     $type = $form['#node_type']->type;
     $set = array(
       '#type' => 'fieldset',
       '#title' => t('Geographic fields'),
       '#collapsible' => TRUE);
-    
+
     $set['allow_position'] = array(
       '#type' => 'checkbox',
       '#default_value' => variable_get('allow_position_'. $type, FALSE),
       '#title' => t('Use position'),
     );
-    
+
     $set['allow_area'] = array(
       '#type' => 'checkbox',
       '#default_value' => variable_get('allow_area_'. $type, FALSE),
       '#title' => t('Use area'),
     );
-    
+
     $set['simple_geo_show_in_form'] = array(
       '#type' => 'checkbox',
       '#default_value' => variable_get('simple_geo_show_in_form_'. $type, TRUE),
       '#title' => t('Show simple geo in node form'),
     );
-    
+
     $form['simple_geo'] = $set;
   }
   else if ($form['#id'] == 'node-form'){
     $node = $form['#node'];
     global $user;
-    
+
     if ($form_id == $node->type .'_node_form') {
       $allow_editing = variable_get('simple_geo_show_in_form_'. $node->type, TRUE);
-      
+
       if ($allow_editing) {
         $allow_position = variable_get('allow_position_'. $node->type, FALSE);
         $allow_area = variable_get('allow_area_'. $node->type, FALSE);
-        
+
         $set = array(
           '#type' => 'item',
           '#prefix' => '<div id="simple_geo_form">',
@@ -187,7 +187,7 @@ function simple_geo_form_alter(&$form, $form_state, $form_id) {
           $set['#weight'] = content_extra_field_weight($form['type']['#value'], 'simple_geo');
         }
 
-        if ($allow_position && (user_access('edit all positions') || 
+        if ($allow_position && (user_access('edit all positions') ||
             ($node->uid == $user->uid && user_access('edit own nodes position')))) {
           if (!isset($node->simple_geo_position)) {
             $position = simple_geo_guess_position($node);
@@ -207,7 +207,7 @@ function simple_geo_form_alter(&$form, $form_state, $form_id) {
           $editing = true;
         }
 
-        if ($allow_area && (user_access('edit all areas') || 
+        if ($allow_area && (user_access('edit all areas') ||
             ($node->uid == $user->uid && user_access('edit own nodes area')))) {
           $area = '';
           if (isset($node->simple_geo_area)) {
@@ -248,8 +248,8 @@ function simple_geo_add_form_js($form) {
  * Implementation of hook_content_extra_fields.
  */
 function simple_geo_content_extra_fields($type_name) {
-  $extras = array();
-  
+  $extra = array();
+
   if (variable_get('allow_position_'. $type_name, FALSE) || variable_get('allow_area_'. $type_name, FALSE)) {
     $extra['simple_geo'] = array(
       'label' => t('Position'),
@@ -257,7 +257,7 @@ function simple_geo_content_extra_fields($type_name) {
       'weight' => 0,
     );
   }
-    
+
   return $extra;
 }
 
@@ -269,7 +269,7 @@ function simple_geo_content_extra_fields($type_name) {
 function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   $allow_position = variable_get('allow_position_'. $node->type, FALSE);
   $allow_area = variable_get('allow_area_'. $node->type, FALSE);
-  
+
   switch($op) {
     case 'delete':
       simple_geo_delete_position($node->nid, 'node');
@@ -278,17 +278,17 @@ function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
     case 'update':
     case 'insert':
       global $user;
-      
-      if (!empty($node->simple_geo_position) && $allow_position && (user_access('edit all positions') || 
+
+      if (!empty($node->simple_geo_position) && $allow_position && (user_access('edit all positions') ||
           ($node->uid == $user->uid && user_access('edit own node position')))) {
         simple_geo_set_position($node->nid, 'node', $node->simple_geo_position);
       }
-      
-      if (!empty($node->simple_geo_area) && $allow_area && (user_access('edit all areas') || 
+
+      if (!empty($node->simple_geo_area) && $allow_area && (user_access('edit all areas') ||
           ($node->uid == $user->uid && user_access('edit own node area')))) {
         simple_geo_set_area($node->nid, 'node', $node->simple_geo_area);
       }
-      
+
       simple_geo_update_cache($node->nid, 'node');
       break;
     case 'load':
@@ -303,7 +303,7 @@ function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       $map_view = '';
       if (!empty($node->simple_geo_position)) {
         $coords = explode(' ', $node->simple_geo_position);
-        
+
         $map_link = variable_get('simple_geo_show_map_link','always');
         switch ($map_link) {
           case 'always':
@@ -319,34 +319,34 @@ function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
             $show_map_link = False;
           break;
         }
-        
+
         if ($show_map_link) {
-          $map_view .= '<div class="node-map"><a rel="map" title="'. 
-            t('Map for @name', array('@name'=>$node->title)) .'" href="'. url('node/'. $node->nid .'/map/') .'">'. 
+          $map_view .= '<div class="node-map"><a rel="map" title="'.
+            t('Map for @name', array('@name'=>$node->title)) .'" href="'. url('node/'. $node->nid .'/map/') .'">'.
             t('Show on map') .'</a></div>';
         }
-        
+
         if (variable_get('simple_geo_add_microformat_tag',1)) {
           $map_view .= '<div class="geo"><span class="latitude">'. $coords[0] .'</span><span class="longitude">'. $coords[1] .'</span></div>';
         }
       }
-      
+
       if (!empty($node->simple_geo_area) && variable_get('simple_geo_add_microformat_tag',1)) {
         $map_view .= '<script type="text/javascript">var node_'. $node->nid .'_position="'. $node->simple_geo_position .'";'.
           'var node_'. $node->nid .'_area="'. $node->simple_geo_area .'";</script>';
       }
-      
+
       $node->content['simple_geo'] = array(
         '#weight' => 50,
         '#value' => $map_view,
       );
-      
+
       break;
   }
 }
 
 /**
- * Gets the position of a object. 
+ * Gets the position of a object.
  *
  * @param int $nid The id of the node
  * @param string $type The type of the object
@@ -361,7 +361,7 @@ function simple_geo_position($id, $type) {
 }
 
 /**
- * Gets the area of a object. 
+ * Gets the area of a object.
  *
  * @param int $nid The id of the object
  * @param string $type The type of the object
@@ -385,27 +385,27 @@ function simple_geo_area($id, $type) {
  **/
 function simple_geo_update_cache($id, $type, $op='all') {
   $updates = array();
-  
+
   if ($op=='all') {
     //Delete all cache entries
-    db_query("DELETE FROM {simple_geo_in_area} 
-      WHERE (point_nid = %d AND point_type='%s') 
-      OR (area_nid = %d AND area_type='%s')", 
+    db_query("DELETE FROM {simple_geo_in_area}
+      WHERE (point_nid = %d AND point_type='%s')
+      OR (area_nid = %d AND area_type='%s')",
       $id, $type, $id, $type);
   }
-  
+
   //Refresh cache for position
   if ($op!='area') {
     if ($op!='all') {
       //Delete all position cache entries
-      db_query("DELETE FROM {simple_geo_in_area} 
+      db_query("DELETE FROM {simple_geo_in_area}
         WHERE point_nid = %d AND point_type='%s'", $id, $type);
     }
-    
+
     $position = simple_geo_position($id, $type);
     if ($position) {
       $p_array = simple_geo_coordinates_to_array($position);
-      $res = db_query("SELECT nid, type, AsText(area) as area_wkt 
+      $res = db_query("SELECT nid, type, AsText(area) as area_wkt
         FROM {simple_geo_area}
         WHERE Contains(area, GeomFromText('%s'))", simple_geo_to_wkt('point', $position));
       while ($bb_match = db_fetch_object($res)) {
@@ -417,7 +417,7 @@ function simple_geo_update_cache($id, $type, $op='all') {
       }
     }
   }
-  
+
   //Refresh cache for area
   if ($op!='point') {
     if ($op!='all') {
@@ -427,7 +427,7 @@ function simple_geo_update_cache($id, $type, $op='all') {
     $area = simple_geo_area($nid, $type);
     if ($area) {
       $a_array = simple_geo_coordinates_to_array($area);
-      $res = db_query("SELECT nid, type, AsText(position) as position_wkt 
+      $res = db_query("SELECT nid, type, AsText(position) as position_wkt
         FROM {simple_geo_position}
         WHERE Contains(GeomFromText('%s'), position)", simple_geo_to_wkt('polygon', $area));
       $points = array();
@@ -440,19 +440,19 @@ function simple_geo_update_cache($id, $type, $op='all') {
       }
     }
   }
-  
+
   if(count($updates)) {
     //Add all new cache items
     $params = array();
     $query = "INSERT INTO {simple_geo_in_area}(point_nid, point_type, area_nid, area_type) VALUES";
-    
+
     foreach ($updates as $pk => $update) {
       $query .= "(%d, '%s', %d, '%s'),";
       $params = array_merge($params, $update);
     }
     array_unshift($params, trim($query,','));
     call_user_func_array('db_query', $params);
-    
+
     //Notify all modules of new spatial relationships
     $handlers = module_implements('simple_geo_inside');
     foreach ($updates as $pk => $update) {
@@ -472,7 +472,7 @@ function simple_geo_update_cache($id, $type, $op='all') {
  * @return void
  **/
 function simple_geo_contains($area_nid, $area_type, $position_nid, $position_type) {
-  $res = db_query("SELECT COUNT(*) FROM {simple_geo_in_area} WHERE point_nid=%d AND point_type='%s' AND area_nid=%d AND area_type='%s'", 
+  $res = db_query("SELECT COUNT(*) FROM {simple_geo_in_area} WHERE point_nid=%d AND point_type='%s' AND area_nid=%d AND area_type='%s'",
     $position_nid, $position_type, $area_nid, $area_type);
   return db_result($res)==1;
 }
@@ -536,44 +536,44 @@ function simple_geo_point_in_polygon($point, $polygon) {
   if (!is_array($point)) {
     $point = simple_geo_coordinates_to_array($point);
   }
-  $vertices = $polygon; 
+  $vertices = $polygon;
   if (!is_array($vertices)) {
     $vertices = simple_geo_coordinates_to_array($vertices);
   }
-  
+
   // Check if the point sits exactly on a vertex
   if (simple_geo_point_on_vertex($point, $vertices) == true) {
     return true;
   }
-  
+
   // Check if the point is inside the polygon or on the boundary
-  $intersections = 0; 
+  $intersections = 0;
   $vertices_count = count($vertices);
-  
+
   for ($i=1; $i < $vertices_count; $i++) {
-    $vertex1 = $vertices[$i-1]; 
+    $vertex1 = $vertices[$i-1];
     $vertex2 = $vertices[$i];
-    if ($vertex1[1] == $vertex2[1] 
-        and $vertex1[1] == $point[1] 
-        and $point[0] > min($vertex1[0], $vertex2[0]) 
+    if ($vertex1[1] == $vertex2[1]
+        and $vertex1[1] == $point[1]
+        and $point[0] > min($vertex1[0], $vertex2[0])
         and $point[0] < max($vertex1[0], $vertex2[0])) { // Check if point is on an horizontal polygon boundary
       return true;
     }
-    if ($point[1] > min($vertex1[1], $vertex2[1]) 
-        and $point[1] <= max($vertex1[1], $vertex2[1]) 
-        and $point[0] <= max($vertex1[0], $vertex2[0]) 
-        and $vertex1[1] != $vertex2[1]) { 
-      $xinters = ($point[1] - $vertex1[1]) * ($vertex2[0] - $vertex1[0]) / ($vertex2[1] - $vertex1[1]) + $vertex1[0]; 
-      
+    if ($point[1] > min($vertex1[1], $vertex2[1])
+        and $point[1] <= max($vertex1[1], $vertex2[1])
+        and $point[0] <= max($vertex1[0], $vertex2[0])
+        and $vertex1[1] != $vertex2[1]) {
+      $xinters = ($point[1] - $vertex1[1]) * ($vertex2[0] - $vertex1[0]) / ($vertex2[1] - $vertex1[1]) + $vertex1[0];
+
       if ($xinters == $point[0]) { // Check if point is on the polygon boundary (other than horizontal)
         return true;
       }
       if ($vertex1[0] == $vertex2[0] || $point[0] <= $xinters) {
-        $intersections++; 
+        $intersections++;
       }
-    } 
-  } 
-  // If the number of edges we passed through is even, then it's in the polygon. 
+    }
+  }
+  // If the number of edges we passed through is even, then it's in the polygon.
   if ($intersections % 2 != 0) {
     return true;
   } else {
@@ -612,7 +612,7 @@ function simple_geo_delete_position($id, $type) {
  *
  * Does NOT update the cache
  * see simple_geo_update_cache for updating the cache
- * 
+ *
  * @return void
  **/
 function simple_geo_delete_area($id, $type) {
@@ -672,7 +672,7 @@ function simple_geo_to_wkt($type, $coord) {
  * and returns them as an array.
  *
  * If the string only contains a single coordinate pair
- * an array with lat,long will be returned. Otherwise 
+ * an array with lat,long will be returned. Otherwise
  * an array containing arrays for each coordinate pair
  * will be returned.
  *
@@ -693,7 +693,7 @@ function simple_geo_coordinates_to_array($coords) {
 }
 
 /**
- * Helper function that takes a string with WKT 
+ * Helper function that takes a string with WKT
  * formatted coordinate pairs and changes it to
  * use other separators.
  *
@@ -704,11 +704,11 @@ function simple_geo_custom_separators($coords, $pair=SIMPLE_GEO_PAIR_SEPARATOR, 
   if ($pair==SIMPLE_GEO_PAIR_SEPARATOR && $coordinate==SIMPLE_GEO_COORDINATE_SEPARATOR) {
     return $coords;
   }
-  
+
   //Map separators to temporary tokens to avoid mixup of separator types
   $coords = str_replace(SIMPLE_GEO_PAIR_SEPARATOR, '#P', $coords);
   $coords = str_replace(SIMPLE_GEO_COORDINATE_SEPARATOR, '#C', $coords);
-  
+
   //Return the string with the new separators
   return str_replace('#P',$pair,str_replace('#C',$coordinate,$coords));
 }
