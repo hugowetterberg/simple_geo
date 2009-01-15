@@ -37,13 +37,13 @@ if (google && google.load) {
       return def;
     };
     
-    jQuery('#edit-simple-geo-position-wrapper').hide().length;
+    jQuery('#edit-simple-geo-position-wrapper').hide();
     var has_area = jQuery('#edit-simple-geo-area-wrapper').hide().length;
     
     //Create map view
     var placeholder = jQuery('.map-placeholder:first').css({'width': '100%', 'height': '400px'}).get(0);
     var map = new google.maps.Map2(placeholder);
-     map.addControl(new GSmallMapControl());
+    map.addControl(new GSmallMapControl());
     
     //Get coordinate data
     var aCoords = jQuery('#edit-simple-geo-area').attr('value');
@@ -76,6 +76,21 @@ if (google && google.load) {
       marker.setLatLng(def);
       map.setCenter(def, 13);
       jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value', '');
+    });
+    
+    $('<div class="address-search"><label for="edit-simple-geo-address-search">' + Drupal.t('Search for address') + 
+      '</label><input id="edit-simple-geo-address-search" /></div>').insertBefore(placeholder);
+    var address_input = $('#edit-simple-geo-address-search');
+    var address_lookup = $('<a class="button">' + Drupal.t('Search') + '</a>').insertAfter(address_input);
+    
+    var geocoder = new GClientGeocoder();
+    address_lookup.click(function(){
+      geocoder.getLatLng(address_input.val(), function(coord) {
+        if (coord) {
+          marker.setLatLng(coord);
+          jQuery('#edit-simple-geo-position-wrapper input[type=text]').val(wkt_coord(coord));
+        }
+      });
     });
     
     //Update the position text-field on drag end
