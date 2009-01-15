@@ -84,14 +84,29 @@ if (google && google.load) {
     var address_lookup = $('<a class="button">' + Drupal.t('Search') + '</a>').insertAfter(address_input);
     
     var geocoder = new GClientGeocoder();
-    address_lookup.click(function(){
+    var lookup = function(){
       geocoder.getLatLng(address_input.val(), function(coord) {
         if (coord) {
           marker.setLatLng(coord);
           jQuery('#edit-simple-geo-position-wrapper input[type=text]').val(wkt_coord(coord));
         }
       });
-    });
+    };
+    address_lookup.click(lookup);
+    
+    var lookupOnEnter = function(event) {
+      if (event.keyCode == 13) {
+        event.preventDefault();
+        lookup();
+        return false;
+      }
+    };
+    
+    if ($.browser.mozilla) { 
+      address_input.keypress(lookupOnEnter);
+    } else {
+      address_input.keypress(lookupOnEnter);
+    }
     
     //Update the position text-field on drag end
     GEvent.addListener(marker, "dragend", function() {
