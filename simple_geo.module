@@ -155,6 +155,12 @@ function simple_geo_form_alter(&$form, $form_state, $form_id) {
       '#default_value' => variable_get('allow_area_'. $type, FALSE),
       '#title' => t('Use area'),
     );
+    
+    $set['simple_geo_sync_translations'] = array(
+      '#type' => 'checkbox',
+      '#default_value' => variable_get('simple_geo_sync_translations_'. $type, TRUE),
+      '#title' => t('Synchronize translations'),
+    );
 
     $set['simple_geo_show_in_form'] = array(
       '#type' => 'checkbox',
@@ -267,6 +273,7 @@ function simple_geo_content_extra_fields($type_name) {
  * @return mixed
  **/
 function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  $sync_translations = variable_get('simple_geo_sync_translations_'. $node->type, TRUE);
   $allow_position = variable_get('allow_position_'. $node->type, FALSE);
   $allow_area = variable_get('allow_area_'. $node->type, FALSE);
 
@@ -283,18 +290,55 @@ function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
     case 'update':
     case 'insert':
       global $user;
+      
+      // Check access, data and configuration to determine if we will 
+      // set position or area.
+      $may_set_position = $allow_position && (user_access('edit all positions') || ($node->uid == $user->uid && user_access('edit own node position')));
+      $may_set_area = $allow_area && (user_access('edit all areas') || ($node->uid == $user->uid && user_access('edit own node area')));
+      $setting_position = $may_set_position && !empty($node->simple_geo_position);
+      $setting_area = $may_set_area && !empty($node->simple_geo_area);
+      
+      if ($may_set_position || $may_set_area) {
+        // Build a list of affected nodes, this includes translations of the node 
+        // if sync_translations is enabled for the content type
+        $affected_nodes = array( $node->nid => TRUE );
+        if ($sync_translations) {
+          $tres = db_query("SELECT nid FROM {node} WHERE tnid=%d AND nid!=%d", array(
+            ':tnid' => $node->tnid,
+            ':nid' => $node->nid,
+          ));
+          while($t = db_result($tres)) {
+            $affected_nodes[$t] = TRUE;
+          }
+        }
+        
+        if ($setting_position) { // Update position
+          foreach ($affected_nodes as $nid => $affected) {
+            simple_geo_set_position($nid, 'node', $node->simple_geo_position);
+          }
+        }
+        else { // Delete position
+          foreach ($affected_nodes as $nid => $affected) {
+            simple_geo_delete_position($nid, 'node');
+          }
+        }
 
-      if (!empty($node->simple_geo_position) && $allow_position && (user_access('edit all positions') ||
-          ($node->uid == $user->uid && user_access('edit own node position')))) {
-        simple_geo_set_position($node->nid, 'node', $node->simple_geo_position);
+        if ($setting_area) { // Update area
+          foreach ($affected_nodes as $nid => $affected) {
+            simple_geo_set_area($nid, 'node', $node->simple_geo_area);
+          }
+        }
+        else { // Delete area
+          foreach ($affected_nodes as $nid => $affected) {
+            simple_geo_delete_area($nid, 'node');
+          }
+        }
+        
+        // Update the cache for the affected nodes
+        foreach ($affected_nodes as $nid => $affected) {
+          simple_geo_update_cache($nid, 'node');
+        }
       }
-
-      if (!empty($node->simple_geo_area) && $allow_area && (user_access('edit all areas') ||
-          ($node->uid == $user->uid && user_access('edit own node area')))) {
-        simple_geo_set_area($node->nid, 'node', $node->simple_geo_area);
-      }
-
-      simple_geo_update_cache($node->nid, 'node');
       break;
     case 'load':
       if ($allow_position) {

@@ -87,6 +87,7 @@ if (google && google.load) {
       geocoder.getLatLng(address_input.val(), function(coord) {
         if (coord) {
           marker.setLatLng(coord);
+          map.setCenter(coord, 13);
           jQuery('#edit-simple-geo-position-wrapper input[type=text]').val(wkt_coord(coord));
         }
       });
