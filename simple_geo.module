@@ -17,6 +17,7 @@ function simple_geo_init() {
   $api_key = variable_get('gmaps_api_key', False);
   if ($api_key) {
     if (variable_get('simple_geo_use_microformat_map',1)) {
+      drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/LookupControl.js', 'module', 'header');
       drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/micromap.js', 'module', 'header');
     }
     if (variable_get('simple_geo_add_google_jsapi',1)) {
@@ -246,6 +247,7 @@ function simple_geo_form_alter(&$form, $form_state, $form_id) {
 }
 
 function simple_geo_add_form_js($form) {
+  drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/LookupControl.js', 'module', 'header');
   drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/edit.js', 'module', 'header');
   return $form;
 }
