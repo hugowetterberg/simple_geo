@@ -1,6 +1,8 @@
 // $Id$
 
-function LookupControl() {};
+function LookupControl(custom_marker_handling) {
+  this.custom_marker_handling = custom_marker_handling;
+};
 
 if (google && google.load) {
   google.load('maps', '2.x');
@@ -19,10 +21,10 @@ if (google && google.load) {
       lookup_icon.iconAnchor = new GPoint(11, 33);
   
       var container = $('<div class="address-search"><label for="edit-simple-geo-address-search">' + Drupal.t('Search for address') + 
-        ': </label><input id="edit-simple-geo-address-search" /></div>').appendTo(map.getContainer());
+        ': </label><input id="edit-simple-geo-address-search" /></div>').appendTo(map.getContainer()).get(0);
       var address_input = $('#edit-simple-geo-address-search');
       var address_lookup = $('<a class="">' + Drupal.t('Search') + '</a>').insertAfter(address_input);
-      container.css({
+      $(container).css({
         'background-color': '#FFFFFF',
         'padding': '2px',
         'border': '1px solid black'
@@ -30,14 +32,11 @@ if (google && google.load) {
 
       var geocoder = new GClientGeocoder();
       var lookup_marker;
-      var control = this;
       var lookup = function(){
         geocoder.getLatLng(address_input.val(), function(coord) {
           if (coord) {
-            if (typeof(control.customAction)=='function') {
-              control.customAction(coord);
-            }
-            else {
+            $(container).trigger('positioned', coord);
+            if (!control.custom_marker_handling) {
               if (!lookup_marker) {
                 lookup_marker = new google.maps.Marker(coord, {'icon':lookup_icon});
                 map.addOverlay(lookup_marker);
@@ -45,7 +44,7 @@ if (google && google.load) {
               else {
                 lookup_marker.setLatLng(coord);
               }
-              map.setCenter(coord, Math.max(14,map.getZoom()-1));
+              map.setCenter(coord, Math.max(14, map.getZoom()-1));
             }
           }
         });
@@ -66,7 +65,8 @@ if (google && google.load) {
         address_input.keypress(lookupOnEnter);
       }
 
-      return container.get(0);
+      this.container = container;
+      return container;
     };
   });
 }

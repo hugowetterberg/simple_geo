@@ -78,13 +78,13 @@ if (google && google.load) {
       jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value', '');
     });
     
-    var lookup = new LookupControl();
+    var lookup = new LookupControl(true);
     map.addControl(lookup);
-    lookup.customAction = function(coord) {
+    $(lookup.container).bind('positioned', function(evt, coord) {
       marker.setLatLng(coord);
       map.setCenter(coord, 13);
       jQuery('#edit-simple-geo-position-wrapper input[type=text]').val(wkt_coord(coord));
-    };
+    });
 
     //Update the position text-field on drag end
     GEvent.addListener(marker, "dragend", function() {
