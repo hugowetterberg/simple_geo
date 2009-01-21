@@ -32,6 +32,7 @@ if (google && google.load) {
 
       var geocoder = new GClientGeocoder();
       var lookup_marker;
+      var control = this;
       var lookup = function(){
         geocoder.getLatLng(address_input.val(), function(coord) {
           if (coord) {
