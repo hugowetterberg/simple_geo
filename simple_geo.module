@@ -295,12 +295,10 @@ function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       
       // Check access, data and configuration to determine if we will 
       // set position or area.
-      $may_set_position = $allow_position && (user_access('edit all positions') || ($node->uid == $user->uid && user_access('edit own node position')));
-      $may_set_area = $allow_area && (user_access('edit all areas') || ($node->uid == $user->uid && user_access('edit own node area')));
-      $setting_position = $may_set_position && !empty($node->simple_geo_position);
-      $setting_area = $may_set_area && !empty($node->simple_geo_area);
+      $setting_position = $allow_position && !empty($node->simple_geo_position);
+      $setting_area = $allow_area && !empty($node->simple_geo_area);
       
-      if ($may_set_position || $may_set_area) {
+      if ($allow_position || $allow_area) {
         // Build a list of affected nodes, this includes translations of the node 
         // if sync_translations is enabled for the content type
         $affected_nodes = array( $node->nid => TRUE );
@@ -319,7 +317,7 @@ function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
             simple_geo_set_position($nid, 'node', $node->simple_geo_position);
           }
         }
-        else { // Delete position
+        else if ($allow_position) { // Delete position
           foreach ($affected_nodes as $nid => $affected) {
             simple_geo_delete_position($nid, 'node');
           }
@@ -330,7 +328,7 @@ function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
             simple_geo_set_area($nid, 'node', $node->simple_geo_area);
           }
         }
-        else { // Delete area
+        else if ($allow_area) { // Delete area
           foreach ($affected_nodes as $nid => $affected) {
             simple_geo_delete_area($nid, 'node');
           }
@@ -352,7 +350,7 @@ function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       break;
     case 'view':
       $map_view = '';
-      if (!empty($node->simple_geo_position)) {
+      if ($allow_position && !empty($node->simple_geo_position)) {
         $coords = explode(' ', $node->simple_geo_position);
 
         $map_link = variable_get('simple_geo_show_map_link','always');
