@@ -303,7 +303,7 @@ function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
         // if sync_translations is enabled for the content type
         $affected_nodes = array( $node->nid => TRUE );
         if ($sync_translations && $node->tnid) {
-          $tres = db_query("SELECT nid FROM {node} WHERE tnid=%d AND AND nid!=%d", array(
+          $tres = db_query("SELECT nid FROM {node} WHERE tnid=%d AND tnid!=0 AND nid!=%d", array(
             ':tnid' => $node->tnid,
             ':nid' => $node->nid,
           ));
