@@ -10,12 +10,12 @@
  **/
 function simple_geo_install() {
   drupal_install_schema('simple_geo');
-  
-  db_query("ALTER TABLE {simple_geo_area} 
-    ADD COLUMN area POLYGON NOT NULL, 
+
+  db_query("ALTER TABLE {simple_geo_area}
+    ADD COLUMN area POLYGON NOT NULL,
     ADD SPATIAL INDEX area_index(area)");
-    
-  db_query("ALTER TABLE {simple_geo_position} 
+
+  db_query("ALTER TABLE {simple_geo_position}
     ADD COLUMN position POINT NOT NULL,
     ADD SPATIAL INDEX position_index(position)");
 }
@@ -54,7 +54,7 @@ function simple_geo_schema() {
     ),
     'primary key' => array('nid','type'),
   );
-  
+
   $schema['simple_geo_area'] = array(
     'fields' => array(
       'nid' => array(
@@ -72,7 +72,7 @@ function simple_geo_schema() {
     ),
     'primary key' => array('nid','type'),
   );
-  
+
   $schema['simple_geo_in_area'] = array(
     'fields' => array(
       'point_nid' => array(
@@ -106,7 +106,7 @@ function simple_geo_schema() {
     ),
     'primary key' => array('point_nid', 'point_type', 'area_nid', 'area_type'),
   );
-  
+
   return $schema;
 }
 
@@ -121,7 +121,7 @@ function simple_geo_update_1() {
     'not null' => TRUE,
   ));
   db_add_primary_key($ret, 'simple_geo_position', array('nid','type'));
-  
+
   //Update area table
   db_drop_primary_key($ret, 'simple_geo_area');
   db_add_field($ret, 'simple_geo_area', 'type', array(
@@ -131,7 +131,7 @@ function simple_geo_update_1() {
     'not null' => TRUE,
   ));
   db_add_primary_key($ret, 'simple_geo_area', array('nid','type'));
-  
+
   //Update simple_geo_in_area table
   db_drop_primary_key($ret, 'simple_geo_in_area');
   db_drop_index($ret, 'simple_geo_in_area', 'point');
@@ -151,6 +151,6 @@ function simple_geo_update_1() {
   db_add_index($ret, 'simple_geo_in_area', 'point', array('point_nid','point_type'));
   db_add_index($ret, 'simple_geo_in_area', 'area', array('area_nid','area_type'));
   db_add_primary_key($ret, 'simple_geo_in_area', array('point_nid', 'point_type', 'area_nid', 'area_type'));
-  
+
   return $ret;
 }

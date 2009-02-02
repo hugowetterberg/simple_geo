@@ -2,9 +2,9 @@
 
 if (google && google.load) {
   google.load('maps', '2.x');
-  
+
   jQuery(document).ready(function() {
-    
+
     //Creates a LatLng object from a coordinate string
     var wkt_to_latlng = function(wkt) {
       var coords = wkt.split(' ');
@@ -35,19 +35,19 @@ if (google && google.load) {
       }
       return def;
     };
-    
+
     var has_position = jQuery('#edit-simple-geo-position-wrapper').hide().length;
     var has_area = jQuery('#edit-simple-geo-area-wrapper').hide().length;
-    
+
     //Create map view
     var placeholder = jQuery('.map-placeholder:first').css({'width': '100%', 'height': '400px'}).get(0);
     var map = new google.maps.Map2(placeholder);
     map.addControl(new GSmallMapControl());
-    
+
     //Get coordinate data
     var aCoords = jQuery('#edit-simple-geo-area').attr('value');
     var pCoords = jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value');
-    
+
     //Center the map on the position if we have one
     var position = default_position();
     if (pCoords) {
@@ -57,7 +57,7 @@ if (google && google.load) {
       position = default_position();
     }
     map.setCenter(position, 13);
-    
+
     var icon;
     //Create our marker and make it draggable
     if (Drupal.settings['user_map']) {
@@ -67,7 +67,7 @@ if (google && google.load) {
       icon.iconAnchor = new GPoint(9, 29);
       icon.image = Drupal.settings.user_map.favicon_path +'/default/0/marker.png';
     }
-    
+
     var resetDesc = Drupal.t('Remove position (Resets the marker to default position)');
     var marker = new GMarker(position, {draggable: true, icon: icon});
     $('<a title="' + resetDesc + '">' + resetDesc + '</a>').insertAfter(placeholder).click(function(){
@@ -76,7 +76,7 @@ if (google && google.load) {
       map.setCenter(def, 13);
       jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value', '');
     });
-    
+
     var lookup = new LookupControl(true);
     map.addControl(lookup);
     $(lookup.container).bind('positioned', function(evt, coord) {
@@ -89,16 +89,16 @@ if (google && google.load) {
     GEvent.addListener(marker, "dragend", function() {
       jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value', wkt_coord(this.getLatLng()));
     });
-    
+
     //Listen for node loaded events to get default positions (used for group based position for nodes)
     jQuery(document).one('nodeLoaded', function (e, nid) {
       var curr_pos = jQuery('#edit-simple-geo-position').attr('value');
       if (!curr_pos.length) {
-        Drupal.service('node.get', 
+        Drupal.service('node.get',
           [
             nid,
             ['simple_geo_position']
-          ], 
+          ],
           function (res, err) {
             if (res && res.simple_geo_position) {
               var position = wkt_to_latlng(res.simple_geo_position);
@@ -110,12 +110,12 @@ if (google && google.load) {
         );
       }
     });
-    
+
     //Add the marker to the map
     if (has_position) {
       map.addOverlay(marker);
     }
-    
+
     if (has_area) {
       //Create the polygon and set it up so that the user can edit it
       var color = "#ff0000";
@@ -124,7 +124,7 @@ if (google && google.load) {
       polygon.enableDrawing();
       polygon.enableEditing({onEvent: "mouseover"});
 
-      //Add existing vertexes to the polygon. Adding them before 
+      //Add existing vertexes to the polygon. Adding them before
       //drawing and editing is enabled results in strange behaviour
       var polygon_default = polygon_wkt_to_latlng(aCoords);
       for(var i=0; i<polygon_default.length; i++) {
@@ -132,7 +132,7 @@ if (google && google.load) {
       }
 
       //Update the area textarea when the polygon is updated
-      //TODO: This should be done on form submit, as it's slightly 
+      //TODO: This should be done on form submit, as it's slightly
       //more expensive than it's position counterpart.
       GEvent.addListener(polygon, "lineupdated", function() {
         var vCount = this.getVertexCount();

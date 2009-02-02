@@ -6,7 +6,7 @@ function LookupControl(custom_marker_handling) {
 
 if (google && google.load) {
   google.load('maps', '2.x');
-  
+
   $(document).ready(function(){
     LookupControl.prototype = new GControl();
 
@@ -19,8 +19,8 @@ if (google && google.load) {
       lookup_icon.image = 'http://maps.google.com/mapfiles/arrow.png';
       lookup_icon.iconSize = new GSize(39, 34);
       lookup_icon.iconAnchor = new GPoint(11, 33);
-  
-      var container = $('<div class="address-search"><label for="edit-simple-geo-address-search">' + Drupal.t('Search for address') + 
+
+      var container = $('<div class="address-search"><label for="edit-simple-geo-address-search">' + Drupal.t('Search for address') +
         ': </label><input id="edit-simple-geo-address-search" /></div>').appendTo(map.getContainer()).get(0);
       var address_input = $('#edit-simple-geo-address-search');
       var address_lookup = $('<a class="">' + Drupal.t('Search') + '</a>').insertAfter(address_input);
@@ -71,7 +71,7 @@ if (google && google.load) {
         }
       };
 
-      if ($.browser.mozilla) { 
+      if ($.browser.mozilla) {
         address_input.keypress(lookupOnEnter);
       } else {
         address_input.keypress(lookupOnEnter);
