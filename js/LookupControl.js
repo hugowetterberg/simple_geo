@@ -32,9 +32,14 @@ if (google && google.load) {
 
       var geocoder = new GClientGeocoder();
       var lookup_marker;
+      var lookup_string = false;
       var control = this;
       var lookup = function(){
-        geocoder.getLatLng(address_input.val(), function(coord) {
+        if (!lookup_string) {
+          lookup_string = address_input.val();
+        }
+
+        geocoder.getLatLng(lookup_string, function(coord) {
           if (coord) {
             $(container).trigger('positioned', coord);
             if (!control.custom_marker_handling) {
@@ -49,8 +54,14 @@ if (google && google.load) {
             }
           }
         });
+
+        lookup_string = false;
       };
       address_lookup.click(lookup);
+      $('.simplegeo-address-field').blur(function(){
+        lookup_string = $(this).val();
+        lookup();
+      });
 
       var lookupOnEnter = function(event) {
         if (event.keyCode == 13) {
