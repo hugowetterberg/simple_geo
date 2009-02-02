@@ -37,7 +37,7 @@ if (google && google.load) {
       return def;
     };
     
-    jQuery('#edit-simple-geo-position-wrapper').hide();
+    var has_position = jQuery('#edit-simple-geo-position-wrapper').hide().length;
     var has_area = jQuery('#edit-simple-geo-area-wrapper').hide().length;
     
     //Create map view
@@ -113,7 +113,9 @@ if (google && google.load) {
     });
     
     //Add the marker to the map
-    map.addOverlay(marker);
+    if (has_position) {
+      map.addOverlay(marker);
+    }
     
     if (has_area) {
       //Create the polygon and set it up so that the user can edit it
