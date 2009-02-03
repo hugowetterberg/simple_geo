@@ -39,6 +39,10 @@ if (google && google.load) {
           lookup_string = address_input.val();
         }
 
+        if (Drupal.settings.simple_geo_geocoding_suffix !== undefined) {
+          lookup_string += ', ' + Drupal.settings.simple_geo_geocoding_suffix;
+        }
+
         geocoder.getLatLng(lookup_string, function(coord) {
           if (coord) {
             $(container).trigger('positioned', coord);

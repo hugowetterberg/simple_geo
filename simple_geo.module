@@ -7,11 +7,19 @@ define('SIMPLE_GEO_COORDINATE_SEPARATOR', ' ');
 require('includes/simple_geo_themeable_functions.php');
 
 function simple_geo_init() {
+  $settings = array();
+  
   $def_pos = variable_get('simple_geo_default_position', 0);
   if ($def_pos) {
-    drupal_add_js(array(
-      'simple_geo_default_position' => $def_pos,
-    ), 'setting');
+    $settings['simple_geo_default_position'] = $def_pos;
+  }
+  $gc_suffix = variable_get('simple_geo_geocoding_suffix','');
+  if (!empty($gc_suffix)) {
+    $settings['simple_geo_geocoding_suffix'] = $gc_suffix;
+  }
+  
+  if (!empty($settings)) {
+    drupal_add_js($settings, 'setting');
   }
 
   $api_key = variable_get('gmaps_api_key', False);

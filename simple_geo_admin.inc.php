@@ -20,7 +20,14 @@ function simple_geo_settings() {
       'id' => 'edit-simple-geo-position',
     ),
   );
-
+  
+  $form['simple_geo_geocoding_suffix'] = array(
+    '#type' => 'textfield',
+    '#default_value' => variable_get('simple_geo_geocoding_suffix',''),
+    '#title' => t('Geocoding suffix'),
+    '#description' => t('Any suffix entered here will be appended to the address with a separating comma before a geocoding lookup is performed'),
+  );
+  
   $form['simple_geo_show_map_link'] = array(
     '#type' => 'select',
     '#title' => t('Show map links for nodes'),
