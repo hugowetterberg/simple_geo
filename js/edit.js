@@ -78,36 +78,14 @@ if (google && google.load) {
       jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value', '');
     });
     
-    $('<div class="address-search"><label for="edit-simple-geo-address-search">' + Drupal.t('Search for address') + 
-      '</label><input id="edit-simple-geo-address-search" /></div>').insertBefore(placeholder);
-    var address_input = $('#edit-simple-geo-address-search');
-    var address_lookup = $('<a class="button">' + Drupal.t('Search') + '</a>').insertAfter(address_input);
-    
-    var geocoder = new GClientGeocoder();
-    var lookup = function(){
-      geocoder.getLatLng(address_input.val(), function(coord) {
-        if (coord) {
-          marker.setLatLng(coord);
-          jQuery('#edit-simple-geo-position-wrapper input[type=text]').val(wkt_coord(coord));
-        }
-      });
+    var lookup = new LookupControl();
+    map.addControl(lookup);
+    lookup.customAction = function(coord) {
+      marker.setLatLng(coord);
+      map.setCenter(coord, 13);
+      jQuery('#edit-simple-geo-position-wrapper input[type=text]').val(wkt_coord(coord));
     };
-    address_lookup.click(lookup);
-    
-    var lookupOnEnter = function(event) {
-      if (event.keyCode == 13) {
-        event.preventDefault();
-        lookup();
-        return false;
-      }
-    };
-    
-    if ($.browser.mozilla) { 
-      address_input.keypress(lookupOnEnter);
-    } else {
-      address_input.keypress(lookupOnEnter);
-    }
-    
+
     //Update the position text-field on drag end
     GEvent.addListener(marker, "dragend", function() {
       jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value', wkt_coord(this.getLatLng()));

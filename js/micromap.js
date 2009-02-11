@@ -27,6 +27,8 @@ if (google && google.load) {
         icon.image = Drupal.settings.user_map.favicon_path +'/default/0/marker.png';
       }
       
+      map.addControl(new LookupControl());
+      
       var tmp_ids = 0;
       var bounds = new GLatLngBounds();
       var pos_len = positions.length;
