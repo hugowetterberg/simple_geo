@@ -58,8 +58,13 @@ if (google && google.load) {
         lookup_string = false;
       };
       address_lookup.click(lookup);
-      $('.simplegeo-address-field').blur(function(){
-        lookup_string = $(this).val();
+
+      var $fields = $('.simplegeo-address-field');
+      $fields.blur(function(){
+        lookup_string = '';
+        $fields.each(function() {
+          lookup_string += $(this).val() + ' ';
+        });
         lookup();
       });
 
