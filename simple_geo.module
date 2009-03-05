@@ -6,27 +6,6 @@ define('SIMPLE_GEO_COORDINATE_SEPARATOR', ' ');
 
 require('includes/simple_geo_themeable_functions.php');
 
-
-function simple_geo_init() {
-  $def_pos = variable_get('simple_geo_default_position', 0);
-  if ($def_pos) {
-    drupal_add_js(array(
-      'simple_geo_default_position' => $def_pos,
-    ), 'setting');
-  }
-  
-  $api_key = variable_get('gmaps_api_key', False);
-  if ($api_key) {
-    if (variable_get('simple_geo_use_microformat_map',1)) {
-      drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/LookupControl.js', 'module', 'header');
-      drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/micromap.js', 'module', 'header');
-    }
-    if (variable_get('simple_geo_add_google_jsapi',1)) {
-      drupal_set_html_head('<script type="text/javascript" src="http://www.google.com/jsapi?key='. $api_key .'"></script>');
-    }
-  }
-}
-
 /**
  * Implementation of hook_menu
  *
@@ -58,6 +37,24 @@ function simple_geo_menu($may_cache) {
           'weight' => 1,
           'type' => variable_get('simple_geo_add_map_as_local_task',1) ? MENU_LOCAL_TASK : MENU_CALLBACK,
         );
+      }
+    }
+    
+    $def_pos = variable_get('simple_geo_default_position', 0);
+    if ($def_pos) {
+      drupal_add_js(array(
+        'simple_geo_default_position' => $def_pos,
+      ), 'setting');
+    }
+
+    $api_key = variable_get('gmaps_api_key', False);
+    if ($api_key) {
+      if (variable_get('simple_geo_use_microformat_map',1)) {
+        drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/LookupControl.js', 'module', 'header');
+        drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/micromap.js', 'module', 'header');
+      }
+      if (variable_get('simple_geo_add_google_jsapi',1)) {
+        drupal_set_html_head('<script type="text/javascript" src="http://www.google.com/jsapi?key='. $api_key .'"></script>');
       }
     }
   }
