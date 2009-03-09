@@ -1,11 +1,17 @@
 <?php
+// $Id$
 
 /**
- * Implementation of hook_theme
+ * @file
+ * Theme functions for simple geo
+ */
+
+/**
+ * Implementation of hook_theme().
  *
  * @return array
  * @author Hugo Wetterberg
- **/
+ */
 function simple_geo_theme($existing, $type, $theme, $path) {
   return array(
     'geo_meta_tags' => array(
@@ -17,17 +23,17 @@ function simple_geo_theme($existing, $type, $theme, $path) {
 /**
  * Theme function that generates html meta tags
  * from the geo data of a node
- * 
+ *
  * @param object $node The node to generate meta tags from
  *
  * @return string The meta tags
  * @author Hugo Wetterberg
- **/
+ */
 function theme_geo_meta_tags($node) {
-  if(!isset($node)) {
+  if (!isset($node)) {
     return '';
   }
-  
+
   $meta = '';
   if (!empty($node->simple_geo_position)) {
     $c = explode(' ', $node->simple_geo_position);

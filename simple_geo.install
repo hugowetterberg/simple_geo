@@ -2,12 +2,17 @@
 // $Id$
 
 /**
- * Install hook for simple geo
+ * @file
+ * Install file for the simple geo module
+ */
+
+/**
+ * Implementation of hook_install().
  * We have to add our spatial columns manually in the install because the are unsupported by
  * the schema api
  *
  * @return void
- **/
+ */
 function simple_geo_install() {
   drupal_install_schema('simple_geo');
 
@@ -21,21 +26,21 @@ function simple_geo_install() {
 }
 
 /**
- * Uninstall hook for simple geo
+ * Implementation of hook_uninstall().
  *
  * @return void
- **/
+ */
 function simple_geo_uninstall() {
   drupal_uninstall_schema('simple_geo');
 }
 
 /**
- * The base scheme for simple geo
+ * Implementation of hook_scheme().
  * We have to add our spatial columns manually in the install because the are unsupported by
  * the schema api
  *
  * @return array The database schema for simple_geo
- **/
+ */
 function simple_geo_schema() {
   $schema['simple_geo_position'] = array(
     'fields' => array(
@@ -52,7 +57,7 @@ function simple_geo_schema() {
         'not null' => TRUE,
       )
     ),
-    'primary key' => array('nid','type'),
+    'primary key' => array('nid', 'type'),
   );
 
   $schema['simple_geo_area'] = array(
@@ -70,7 +75,7 @@ function simple_geo_schema() {
         'not null' => TRUE,
       )
     ),
-    'primary key' => array('nid','type'),
+    'primary key' => array('nid', 'type'),
   );
 
   $schema['simple_geo_in_area'] = array(
@@ -101,8 +106,8 @@ function simple_geo_schema() {
       )
     ),
     'indexes' => array(
-      'point' => array('point_nid','point_type'),
-      'area' => array('area_nid','area_type'),
+      'point' => array('point_nid', 'point_type'),
+      'area' => array('area_nid', 'area_type'),
     ),
     'primary key' => array('point_nid', 'point_type', 'area_nid', 'area_type'),
   );
@@ -120,7 +125,7 @@ function simple_geo_update_1() {
     'default' => 'node',
     'not null' => TRUE,
   ));
-  db_add_primary_key($ret, 'simple_geo_position', array('nid','type'));
+  db_add_primary_key($ret, 'simple_geo_position', array('nid', 'type'));
 
   //Update area table
   db_drop_primary_key($ret, 'simple_geo_area');
@@ -130,7 +135,7 @@ function simple_geo_update_1() {
     'default' => 'node',
     'not null' => TRUE,
   ));
-  db_add_primary_key($ret, 'simple_geo_area', array('nid','type'));
+  db_add_primary_key($ret, 'simple_geo_area', array('nid', 'type'));
 
   //Update simple_geo_in_area table
   db_drop_primary_key($ret, 'simple_geo_in_area');
@@ -148,8 +153,8 @@ function simple_geo_update_1() {
     'default' => 'node',
     'not null' => TRUE,
   ));
-  db_add_index($ret, 'simple_geo_in_area', 'point', array('point_nid','point_type'));
-  db_add_index($ret, 'simple_geo_in_area', 'area', array('area_nid','area_type'));
+  db_add_index($ret, 'simple_geo_in_area', 'point', array('point_nid', 'point_type'));
+  db_add_index($ret, 'simple_geo_in_area', 'area', array('area_nid', 'area_type'));
   db_add_primary_key($ret, 'simple_geo_in_area', array('point_nid', 'point_type', 'area_nid', 'area_type'));
 
   return $ret;

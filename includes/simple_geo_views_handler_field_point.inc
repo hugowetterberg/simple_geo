@@ -1,5 +1,10 @@
 <?php
-// $Id: views_handler_field_node.inc,v 1.1 2008/09/03 19:21:29 merlinofchaos Exp $
+// $Id$
+
+/**
+ * @file
+ * Handler for a geographical point from simple geo
+ */
 
 class simple_geo_views_handler_field_point extends views_handler_field {
   /**
@@ -12,7 +17,7 @@ class simple_geo_views_handler_field_point extends views_handler_field {
 
     $this->add_additional_fields();
   }
-  
+
   /**
    * Render the field.
    *
