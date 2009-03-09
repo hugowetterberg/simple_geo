@@ -1,7 +1,6 @@
 ; $Id$
 name = Simple Geo
-version = "6.x-0.2"
+version = "6.x-0.x-dev"
 core = "6.x"
 description = Allows nodes to add point and polygon fields
 package = Geo
-

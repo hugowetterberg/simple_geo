@@ -1,55 +1,63 @@
 // $Id$
 
+/*global google, jQuery, Drupal, GSmallMapControl, GIcon, G_DEFAULT_ICON, GSize, GPoint, GMarker, LookupControl, GEvent, GPolygon */
+
 if (google && google.load) {
   google.load('maps', '2.x');
 
-  jQuery(document).ready(function() {
+  jQuery(document).ready(function () {
 
+    var has_position, has_area, placeholder, map, aCoords, pCoords, position, icon, resetDesc,
+    marker, lookup, color, polygon, polygon_default, i,
     //Creates a LatLng object from a coordinate string
-    var wkt_to_latlng = function(wkt) {
+    wkt_to_latlng = function (wkt) {
       var coords = wkt.split(' ');
       if (coords.length >= 2) {
         return new google.maps.LatLng(coords[0], coords[1]);
       }
     },
     //Creates an array of LatLng objects from a coordinate list string
-    polygon_wkt_to_latlng = function(wkt) {
-      var pairs = wkt.split(',');
-      var pair_count = pairs.length;
-      var coords = [];
-      for (var i=0; i<pair_count; i++) {
-        var c = wkt_to_latlng(pairs[i]);
-        if(c) {
+    polygon_wkt_to_latlng = function (wkt) {
+      var pairs, pair_count, coords, i, c;
+
+      pairs = wkt.split(',');
+      pair_count = pairs.length;
+      coords = [];
+
+      for (i = 0; i < pair_count; i += 1) {
+        c = wkt_to_latlng(pairs[i]);
+        if (c) {
           coords.push(c);
         }
       }
+
       return coords;
     },
-    wkt_coord = function(ll) {
+    wkt_coord = function (ll) {
       return ll.lat() + ' ' + ll.lng();
     },
-    default_position = function() {
+    default_position = function () {
       var def = wkt_to_latlng(Drupal.settings.simple_geo_default_position ? Drupal.settings.simple_geo_default_position : '');
       if (!def) {
-        def = new google.maps.LatLng(55.675455,12.59119);
+        def = new google.maps.LatLng(55.675455, 12.59119);
       }
       return def;
     };
 
-    var has_position = jQuery('#edit-simple-geo-position-wrapper').hide().length;
-    var has_area = jQuery('#edit-simple-geo-area-wrapper').hide().length;
+    has_position = jQuery('#edit-simple-geo-position-wrapper').hide().length;
+    has_area = jQuery('#edit-simple-geo-area-wrapper').hide().length;
 
     //Create map view
-    var placeholder = jQuery('.map-placeholder:first').css({'width': '100%', 'height': '400px'}).get(0);
-    var map = new google.maps.Map2(placeholder);
+    placeholder = jQuery('.map-placeholder:first').css({'width': '100%', 'height': '400px'}).get(0);
+    map = new google.maps.Map2(placeholder);
     map.addControl(new GSmallMapControl());
 
     //Get coordinate data
-    var aCoords = jQuery('#edit-simple-geo-area').attr('value');
-    var pCoords = jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value');
+    aCoords = jQuery('#edit-simple-geo-area').attr('value');
+    pCoords = jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value');
 
     //Center the map on the position if we have one
-    var position = default_position();
+    position = default_position();
     if (pCoords) {
       position = wkt_to_latlng(pCoords);
     }
@@ -58,35 +66,34 @@ if (google && google.load) {
     }
     map.setCenter(position, 13);
 
-    var icon;
     //Create our marker and make it draggable
-    if (Drupal.settings['user_map']) {
+    if (Drupal.settings.user_map) {
       icon = new GIcon(G_DEFAULT_ICON);
       icon.shadow = null;
       icon.iconSize = new GSize(20, 29);
       icon.iconAnchor = new GPoint(9, 29);
-      icon.image = Drupal.settings.user_map.favicon_path +'/default/0/marker.png';
+      icon.image = Drupal.settings.user_map.favicon_path + '/default/0/marker.png';
     }
 
-    var resetDesc = Drupal.t('Remove position (Resets the marker to default position)');
-    var marker = new GMarker(position, {draggable: true, icon: icon});
-    $('<a title="' + resetDesc + '">' + resetDesc + '</a>').insertAfter(placeholder).click(function(){
+    resetDesc = Drupal.t('Remove position (Resets the marker to default position)');
+    marker = new GMarker(position, {draggable: true, icon: icon});
+    jQuery('<a title="' + resetDesc + '">' + resetDesc + '</a>').insertAfter(placeholder).click(function () {
       var def = default_position();
       marker.setLatLng(def);
       map.setCenter(def, 13);
       jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value', '');
     });
 
-    var lookup = new LookupControl(true);
+    lookup = new LookupControl(true);
     map.addControl(lookup);
-    $(lookup.container).bind('positioned', function(evt, coord) {
+    jQuery(lookup.container).bind('positioned', function (evt, coord) {
       marker.setLatLng(coord);
       map.setCenter(coord, 13);
       jQuery('#edit-simple-geo-position-wrapper input[type=text]').val(wkt_coord(coord));
     });
 
     //Update the position text-field on drag end
-    GEvent.addListener(marker, "dragend", function() {
+    GEvent.addListener(marker, "dragend", function () {
       jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value', wkt_coord(this.getLatLng()));
     });
 
@@ -118,29 +125,28 @@ if (google && google.load) {
 
     if (has_area) {
       //Create the polygon and set it up so that the user can edit it
-      var color = "#ff0000";
-      var polygon = new GPolygon([], color, 2, 0.7, color, 0.2);
+      color = "#ff0000";
+      polygon = new GPolygon([], color, 2, 0.7, color, 0.2);
       map.addOverlay(polygon);
       polygon.enableDrawing();
       polygon.enableEditing({onEvent: "mouseover"});
 
       //Add existing vertexes to the polygon. Adding them before
       //drawing and editing is enabled results in strange behaviour
-      var polygon_default = polygon_wkt_to_latlng(aCoords);
-      for(var i=0; i<polygon_default.length; i++) {
+      polygon_default = polygon_wkt_to_latlng(aCoords);
+      for (i = 0; i < polygon_default.length; i += 1) {
         polygon.insertVertex(i, polygon_default[i]);
       }
 
       //Update the area textarea when the polygon is updated
       //TODO: This should be done on form submit, as it's slightly
       //more expensive than it's position counterpart.
-      GEvent.addListener(polygon, "lineupdated", function() {
-        var vCount = this.getVertexCount();
-        var cArray = [];
-        for(var i=0; i<vCount; i++) {
+      GEvent.addListener(polygon, "lineupdated", function () {
+        var vCount = this.getVertexCount(), cArray = [], i;
+        for (i = 0; i < vCount; i += 1) {
           cArray.push(wkt_coord(this.getVertex(i)));
         }
-        jQuery('#edit-simple-geo-area').attr('value',cArray.join(','));
+        jQuery('#edit-simple-geo-area').attr('value', cArray.join(','));
       });
     }
   });
