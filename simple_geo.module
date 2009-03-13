@@ -262,6 +262,7 @@ function simple_geo_form_alter(&$form, $form_state, $form_id) {
 function simple_geo_add_form_js($form) {
   drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/LookupControl.js', 'module', 'header');
   drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/edit.js', 'module', 'header');
+  theme('simple_geo_form_css');
   return $form;
 }
 

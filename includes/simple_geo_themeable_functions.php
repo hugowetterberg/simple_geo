@@ -17,6 +17,7 @@ function simple_geo_theme($existing, $type, $theme, $path) {
     'geo_meta_tags' => array(
       'arguments' => array('node' => NULL),
     ),
+    'simple_geo_form_css' => array(),
   );
 }
 
@@ -45,4 +46,8 @@ function theme_geo_meta_tags($node) {
     $meta .= '<meta name="geo.extent" content="'. $node->simple_geo_area .'" />';
   }
   return $meta;
+}
+
+function theme_simple_geo_form_css() {
+  drupal_add_css(drupal_get_path('module', 'simple_geo') .'/css/simple_geo.css');
 }

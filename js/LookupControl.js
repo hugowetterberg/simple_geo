@@ -27,12 +27,7 @@ if (google && google.load) {
       container = jQuery('<div class="address-search"><label for="edit-simple-geo-address-search">' + Drupal.t('Search for address') +
         ': </label><input id="edit-simple-geo-address-search" /></div>').appendTo(map.getContainer()).get(0);
       address_input = jQuery('#edit-simple-geo-address-search');
-      address_lookup = jQuery('<a class="">' + Drupal.t('Search') + '</a>').insertAfter(address_input);
-      jQuery(container).css({
-        'background-color': '#FFFFFF',
-        'padding': '2px',
-        'border': '1px solid black'
-      });
+      address_lookup = jQuery('<input type="button" />').attr('value', Drupal.t('Search')).insertAfter(address_input).wrap('<span class="form-button"></span>');
 
       geocoder = new GClientGeocoder();
       lookup_string = false;
