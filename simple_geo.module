@@ -93,6 +93,10 @@ function simple_geo_guess_position($node) {
 
 
 function simple_geo_user($op, &$edit, &$account, $category = NULL) {
+  if (($category!==NULL && $category!='account') || !variable_get('simple_geo_position_users', 1)) {
+    return;
+  }
+  
   switch ($op) {
     case 'form':
       $set = array(

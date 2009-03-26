@@ -26,6 +26,12 @@ function simple_geo_settings() {
     ),
   );
 
+  $form['simple_geo_position_users'] = array(
+    '#type' => 'checkbox',
+    '#default_value' => variable_get('simple_geo_position_users', 1),
+    '#title' => t('Enable user positioning'),
+  );
+
   $form['simple_geo_geocoding_suffix'] = array(
     '#type' => 'textfield',
     '#default_value' => variable_get('simple_geo_geocoding_suffix', ''),
