@@ -23,6 +23,9 @@ function simple_geo_init() {
     $settings['simple_geo_geocoding_suffix'] = $gc_suffix;
   }
 
+  $settings['simple_geo_micromap_parent'] = variable_get('simple_geo_micromap_parent', '#main-inner');
+  $settings['simple_geo_micromap_add_mode'] = variable_get('simple_geo_micromap_add_mode', 'prepend');
+
   if (!empty($settings)) {
     drupal_add_js($settings, 'setting');
   }

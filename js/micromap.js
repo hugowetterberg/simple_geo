@@ -6,14 +6,24 @@ if (google && google.load) {
   google.load('maps', '2.x');
 
   jQuery(document).ready(function () {
-    var positions, map_highlight, placeholder, map, icon, tmp_ids, bounds, pos_len, i, lat, lng, pos, marker, default_zoom, default_center, map_state;
+    var positions, map_highlight, placeholder, map, icon, tmp_ids, bounds, pos_len, i, lat, lng, pos, marker, default_zoom, default_center, map_state, placeholder_html, micromap_parent, micromap_add_mode;
 
     positions = jQuery('.geo');
 
     if (positions.length > 0) {
       placeholder = document.getElementById('micro-map-widget');
       if (!placeholder) {
-        jQuery('#main-inner').prepend('<div id="micro-map" class="small"><h2 class="title">' + Drupal.t('Map') + '</h2><div id="micro-map-widget"></div>' + '<span class="button" id="micro-map-size"><strong>&lt; ' + Drupal.t('Wider map') + '</strong></span></div>');
+        placeholder_html = '<div id="micro-map" class="small"><h2 class="title">' + Drupal.t('Map') + '</h2><div id="micro-map-widget"></div>' + '<span class="button" id="micro-map-size"><strong>&lt; ' + Drupal.t('Wider map') + '</strong></span></div>';
+        micromap_parent = Drupal.settings.simple_geo_micromap_parent ? Drupal.settings.simple_geo_micromap_parent : '#main-inner';
+        micromap_add_mode = Drupal.settings.simple_geo_micromap_add_mode ? Drupal.settings.simple_geo_micromap_add_mode : 'prepend';
+
+        if (micromap_add_mode == 'prepend') {
+          jQuery(micromap_parent).prepend(placeholder_html);
+        }
+        else {
+          jQuery(micromap_parent).append(placeholder_html);
+        }
+
         placeholder = document.getElementById('micro-map-widget');
       }
       map = new google.maps.Map2(placeholder);

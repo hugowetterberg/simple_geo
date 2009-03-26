@@ -32,6 +32,28 @@ function simple_geo_settings() {
     '#title' => t('Enable user positioning'),
   );
 
+  $form['micromap_set'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Micromap placement'),
+  );
+
+  $form['micromap_set']['simple_geo_micromap_parent'] = array(
+    '#type' => 'textfield',
+    '#default_value' => variable_get('simple_geo_micromap_parent', '#main-inner'),
+    '#title' => t('Parent element'),
+    '#description' => t('The jQuery expression that should be used to find the micromap parent'),
+  );
+
+  $form['micromap_set']['simple_geo_micromap_add_mode'] = array(
+    '#type' => 'select',
+    '#title' => t('Add method'),
+    '#options' => array(
+      'prepend' => t('Prepend'),
+      'append' => t('Append'),
+    ),
+    '#default_value' => variable_get('simple_geo_micromap_add_mode', 'prepend'),
+  );
+
   $form['simple_geo_geocoding_suffix'] = array(
     '#type' => 'textfield',
     '#default_value' => variable_get('simple_geo_geocoding_suffix', ''),
