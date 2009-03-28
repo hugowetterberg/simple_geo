@@ -7,7 +7,7 @@ if (google && google.load) {
 
   jQuery(document).ready(function () {
 
-    var has_position, has_area, placeholder, map, aCoords, pCoords, position, icon, resetDesc,
+    var has_position, has_area, placeholder, map, aCoords, pCoords, position, icon, resetDesc, resetButton, resetBox,
     marker, lookup, color, polygon, polygon_default, i,
     //Creates a LatLng object from a coordinate string
     wkt_to_latlng = function (wkt) {
@@ -75,14 +75,17 @@ if (google && google.load) {
       icon.image = Drupal.settings.user_map.favicon_path + '/default/0/marker.png';
     }
 
-    resetDesc = Drupal.t('Remove position (Resets the marker to default position)');
+    resetBox = jQuery('<div class="reset-position"></div>');
+    resetButton = Drupal.t('Remove position');
+    resetDesc = Drupal.t('Resets the marker to default position');
     marker = new GMarker(position, {draggable: true, icon: icon});
-    jQuery('<a title="' + resetDesc + '">' + resetDesc + '</a>').insertAfter(placeholder).click(function () {
+    jQuery('<a class="form-button" href="#" title="' + resetDesc + '"><span>' + resetButton + '</span></a>').appendTo(resetBox).click(function () {
       var def = default_position();
       marker.setLatLng(def);
       map.setCenter(def, 13);
       jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value', '');
-    });
+      return false;
+    }).after('<span class="description">' + resetDesc + '</span>');
 
     lookup = new LookupControl(true);
     map.addControl(lookup);
@@ -91,6 +94,7 @@ if (google && google.load) {
       map.setCenter(coord, 13);
       jQuery('#edit-simple-geo-position-wrapper input[type=text]').val(wkt_coord(coord));
     });
+    resetBox.insertAfter(placeholder);
 
     //Update the position text-field on drag end
     GEvent.addListener(marker, "dragend", function () {
