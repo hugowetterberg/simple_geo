@@ -456,22 +456,28 @@ function simple_geo_area($id, $type) {
 function simple_geo_update_cache($id, $type, $op='all') {
   $updates = array();
 
-  if ($op=='all') {
+  $op_all = $op == 'all';
+  $op_point = $op_all || $op == 'point';
+  $op_area = $op_all || $op == 'area';
+  if ($op_all) {
     //Delete all cache entries
     db_query("DELETE FROM {simple_geo_in_area}
       WHERE (point_nid = %d AND point_type='%s')
       OR (area_nid = %d AND area_type='%s')",
       $id, $type, $id, $type);
   }
+  else if ($op_point) {
+    //Delete all position cache entries
+    db_query("DELETE FROM {simple_geo_in_area}
+      WHERE point_nid = %d AND point_type='%s'", $id, $type);
+  }
+  else if ($op_area) {
+    //Delete all area cache entries
+    db_query("DELETE FROM {simple_geo_in_area} WHERE area_nid = %d AND area_type='%s'", $id, $type);
+  }
 
   //Refresh cache for position
-  if ($op!='area') {
-    if ($op!='all') {
-      //Delete all position cache entries
-      db_query("DELETE FROM {simple_geo_in_area}
-        WHERE point_nid = %d AND point_type='%s'", $id, $type);
-    }
-
+  if ($op_point) {
     $position = simple_geo_position($id, $type);
     if ($position) {
       $p_array = simple_geo_coordinates_to_array($position);
@@ -489,12 +495,8 @@ function simple_geo_update_cache($id, $type, $op='all') {
   }
 
   //Refresh cache for area
-  if ($op!='point') {
-    if ($op!='all') {
-      //Delete all area cache entries
-      db_query("DELETE FROM {simple_geo_in_area} WHERE area_nid = %d AND area_type='%s'", $id, $type);
-    }
-    $area = simple_geo_area($nid, $type);
+  if ($op_area) {
+    $area = simple_geo_area($id, $type);
     if ($area) {
       $a_array = simple_geo_coordinates_to_array($area);
       $res = db_query("SELECT nid, type, AsText(position) as position_wkt
