@@ -165,15 +165,15 @@ function simple_geo_form_alter(&$form, $form_state, $form_id) {
       '#title' => t('Geographic fields'),
       '#collapsible' => TRUE);
 
-    $set['allow_position'] = array(
+    $set['simple_geo_allow_position'] = array(
       '#type' => 'checkbox',
-      '#default_value' => variable_get('allow_position_'. $type, FALSE),
+      '#default_value' => variable_get('simple_geo_allow_position_'. $type, FALSE),
       '#title' => t('Use position'),
     );
 
-    $set['allow_area'] = array(
+    $set['simple_geo_allow_area'] = array(
       '#type' => 'checkbox',
-      '#default_value' => variable_get('allow_area_'. $type, FALSE),
+      '#default_value' => variable_get('simple_geo_allow_area_'. $type, FALSE),
       '#title' => t('Use area'),
     );
 
@@ -199,8 +199,8 @@ function simple_geo_form_alter(&$form, $form_state, $form_id) {
       $allow_editing = variable_get('simple_geo_show_in_form_'. $node->type, TRUE);
 
       if ($allow_editing) {
-        $allow_position = variable_get('allow_position_'. $node->type, FALSE);
-        $allow_area = variable_get('allow_area_'. $node->type, FALSE);
+        $allow_position = variable_get('simple_geo_allow_position_'. $node->type, FALSE);
+        $allow_area = variable_get('simple_geo_allow_area_'. $node->type, FALSE);
 
         $set = array(
           '#type' => 'item',
@@ -279,7 +279,7 @@ function simple_geo_add_form_js($form) {
 function simple_geo_content_extra_fields($type_name) {
   $extra = array();
 
-  if (variable_get('allow_position_'. $type_name, FALSE) || variable_get('allow_area_'. $type_name, FALSE)) {
+  if (variable_get('simple_geo_allow_position_'. $type_name, FALSE) || variable_get('simple_geo_allow_area_'. $type_name, FALSE)) {
     $extra['simple_geo'] = array(
       'label' => t('Position'),
       'description' => t('Simple Geo module form.'),
@@ -297,8 +297,8 @@ function simple_geo_content_extra_fields($type_name) {
  */
 function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   $sync_translations = variable_get('simple_geo_sync_translations_'. $node->type, TRUE);
-  $allow_position = variable_get('allow_position_'. $node->type, FALSE);
-  $allow_area = variable_get('allow_area_'. $node->type, FALSE);
+  $allow_position = variable_get('simple_geo_allow_position_'. $node->type, FALSE);
+  $allow_area = variable_get('simple_geo_allow_area_'. $node->type, FALSE);
 
   switch ($op) {
     case 'delete':
@@ -847,4 +847,34 @@ function simple_geo_views_handlers() {
       ),
     ),
   );
+}
+
+/**
+ * Implementation of hook_node_type().
+ */
+function simple_geo_node_type($op, $info) {
+  $vars = array(
+    'simple_geo_allow_area_',
+    'simple_geo_allow_position_',
+    'simple_geo_sync_translations_',
+    'simple_geo_show_in_form',
+  );
+  switch ($op) {
+    case 'delete':
+      foreach ($vars as $var) {
+        variable_del($var . $info->type);
+      }
+      break;
+    case 'update':
+      foreach ($vars as $var) {
+        $option = variable_get($var . $info->type, NULL);
+        if ($option !== NULL) {
+          variable_set($var . $info->type, $option);
+          if (isset($info->old_type)) {
+            variable_del($var . $info->old_type);
+          }
+        }
+      }
+      break;
+  }
 }
