@@ -99,7 +99,7 @@ function simple_geo_user($op, &$edit, &$account, $category = NULL) {
   if (($category!==NULL && $category!='account') || !variable_get('simple_geo_position_users', 1)) {
     return;
   }
-  
+
   switch ($op) {
     case 'form':
       $set = array(
@@ -291,6 +291,20 @@ function simple_geo_content_extra_fields($type_name) {
 }
 
 /**
+ * Implementation of hook_apachesolr_update_index().
+ */
+function simplegeosolr_apachesolr_update_index(&$doc, $node) {
+  if (isset($node->simple_geo_position)) {
+    $areas = simple_geo_contained_by($node->nid, 'node', 'node');
+    if (!empty($areas)) {
+      foreach ($areas as $area) {
+        $doc->addField('im_simple_geo_area', $area->id);
+      }
+    }
+  }
+}
+
+/**
  * Implementation of hook_nodeapi().
  *
  * @return mixed
@@ -443,6 +457,72 @@ function simple_geo_area($id, $type) {
   if ($wkt = db_result($res)) {
     return simple_geo_clean_wkt('polygon', $wkt);
   }
+}
+
+/**
+ * Gets the areas that contains the object.
+ *
+ * @param int $nid The id of the object.
+ * @param string $type The type of the object.
+ * @param string $area_type Optional. The type of the areas.
+ * @return array
+ *  An array of areas (only including type if $area_type is NULL)
+ */
+function simple_geo_contained_by($id, $type, $area_type=NULL) {
+  $result = array();
+
+  if (!empty($area_type)) {
+    $res = db_query("SELECT area_nid AS id FROM {simple_geo_in_area}
+      WHERE point_nid = %d
+      AND point_type='%s'
+      AND area_type='%s'",
+        $id, $type, $area_type);
+  }
+  else {
+    $res = db_query("SELECT area_nid AS id, area_type AS type FROM {simple_geo_in_area}
+      WHERE point_nid = %d
+      AND point_type='%s'",
+        $id, $type);
+  }
+
+  while ($area = db_fetch_object($res)) {
+    $result[] = $area;
+  }
+
+  return $result;
+}
+
+/**
+ * Gets the points contained by the area.
+ *
+ * @param int $nid The id of the area.
+ * @param string $type The type of the area.
+ * @param string $object_type Optional. The type of the objects.
+ * @return array
+ *  An array of objects (only including type if $object_type is NULL)
+ */
+function simple_geo_contained($id, $type, $object_type=NULL) {
+  $result = array();
+
+  if (!empty($point_type)) {
+    $res = db_query("SELECT point_nid AS id FROM {simple_geo_in_area}
+      WHERE area_nid = %d
+      AND area_type='%s'
+      AND point_type='%s'",
+        $id, $type, $point_type);
+  }
+  else {
+    $res = db_query("SELECT area_nid AS id, area_type AS type FROM {simple_geo_in_area}
+      WHERE area_nid = %d
+      AND area_type='%s'",
+        $id, $type);
+  }
+
+  while ($area = db_fetch_object($res)) {
+    $result[] = $area;
+  }
+
+  return $result;
 }
 
 /**
