@@ -293,7 +293,7 @@ function simple_geo_content_extra_fields($type_name) {
 /**
  * Implementation of hook_apachesolr_update_index().
  */
-function simplegeosolr_apachesolr_update_index(&$doc, $node) {
+function simple_geo_apachesolr_update_index(&$doc, $node) {
   if (isset($node->simple_geo_position)) {
     $areas = simple_geo_contained_by($node->nid, 'node', 'node');
     if (!empty($areas)) {
