@@ -31,6 +31,36 @@ function simple_geo_install() {
  * @return void
  */
 function simple_geo_uninstall() {
+  $type_vars = array(
+    'simple_geo_allow_area_',
+    'simple_geo_allow_position_',
+    'simple_geo_sync_translations_',
+    'simple_geo_show_in_form',
+  );
+  $types = node_get_types();
+
+  foreach ($type_vars as $var) {
+    foreach ($types as $type) {
+      variable_del($var . $type->type);
+    }
+  }
+
+  $vars = array(
+    'simple_geo_default_position',
+    'simple_geo_geocoding_suffix',
+    'simple_geo_micromap_parent',
+    'simple_geo_micromap_add_mode',
+    'simple_geo_use_microformat_map',
+    'simple_geo_add_google_jsapi',
+    'simple_geo_position_users',
+    'simple_geo_show_map_link',
+    'simple_geo_add_microformat_tag',
+  );
+
+  foreach ($vars as $var) {
+    variable_del($var);
+  }
+
   drupal_uninstall_schema('simple_geo');
 }
 
@@ -158,4 +188,24 @@ function simple_geo_update_1() {
   db_add_primary_key($ret, 'simple_geo_in_area', array('point_nid', 'point_type', 'area_nid', 'area_type'));
 
   return $ret;
+}
+
+//For upcoming 6.x-0.5
+function simple_geo_update_2() {
+  $type_vars = array(
+    'allow_area_'     => 'simple_geo_allow_area_',
+    'allow_position_' => 'simple_geo_allow_position_',
+  );
+  $types = node_get_types();
+
+  foreach ($type_vars as $key => $var) {
+    foreach ($types as $type) {
+      $tmp = variable_get($key . $type->type, NULL);
+      if ($tmp !== NULL) {
+        variable_set($var . $type->type, $tmp);
+      }
+    }
+  }
+
+  return array();
 }

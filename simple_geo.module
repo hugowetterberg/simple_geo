@@ -114,7 +114,7 @@ function simple_geo_user($op, &$edit, &$account, $category = NULL) {
   if (($category!==NULL && $category!='account') || !variable_get('simple_geo_position_users', 1)) {
     return;
   }
-  
+
   switch ($op) {
     case 'form':
       $set = array(
@@ -180,15 +180,15 @@ function simple_geo_form_alter(&$form, $form_state, $form_id) {
       '#title' => t('Geographic fields'),
       '#collapsible' => TRUE);
 
-    $set['allow_position'] = array(
+    $set['simple_geo_allow_position'] = array(
       '#type' => 'checkbox',
-      '#default_value' => variable_get('allow_position_'. $type, FALSE),
+      '#default_value' => variable_get('simple_geo_allow_position_'. $type, FALSE),
       '#title' => t('Use position'),
     );
 
-    $set['allow_area'] = array(
+    $set['simple_geo_allow_area'] = array(
       '#type' => 'checkbox',
-      '#default_value' => variable_get('allow_area_'. $type, FALSE),
+      '#default_value' => variable_get('simple_geo_allow_area_'. $type, FALSE),
       '#title' => t('Use area'),
     );
 
@@ -214,8 +214,8 @@ function simple_geo_form_alter(&$form, $form_state, $form_id) {
       $allow_editing = variable_get('simple_geo_show_in_form_'. $node->type, TRUE);
 
       if ($allow_editing) {
-        $allow_position = variable_get('allow_position_'. $node->type, FALSE);
-        $allow_area = variable_get('allow_area_'. $node->type, FALSE);
+        $allow_position = variable_get('simple_geo_allow_position_'. $node->type, FALSE);
+        $allow_area = variable_get('simple_geo_allow_area_'. $node->type, FALSE);
 
         $set = array(
           '#type' => 'item',
@@ -295,7 +295,7 @@ function simple_geo_add_form_js($form) {
 function simple_geo_content_extra_fields($type_name) {
   $extra = array();
 
-  if (variable_get('allow_position_'. $type_name, FALSE) || variable_get('allow_area_'. $type_name, FALSE)) {
+  if (variable_get('simple_geo_allow_position_'. $type_name, FALSE) || variable_get('simple_geo_allow_area_'. $type_name, FALSE)) {
     $extra['simple_geo'] = array(
       'label' => t('Position'),
       'description' => t('Simple Geo module form.'),
@@ -307,14 +307,28 @@ function simple_geo_content_extra_fields($type_name) {
 }
 
 /**
+ * Implementation of hook_apachesolr_update_index().
+ */
+function simple_geo_apachesolr_update_index(&$doc, $node) {
+  if (isset($node->simple_geo_position)) {
+    $areas = simple_geo_contained_by($node->nid, 'node', 'node');
+    if (!empty($areas)) {
+      foreach ($areas as $area) {
+        $doc->addField('im_simple_geo_area', $area->id);
+      }
+    }
+  }
+}
+
+/**
  * Implementation of hook_nodeapi().
  *
  * @return mixed
  */
 function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   $sync_translations = variable_get('simple_geo_sync_translations_'. $node->type, TRUE);
-  $allow_position = variable_get('allow_position_'. $node->type, FALSE);
-  $allow_area = variable_get('allow_area_'. $node->type, FALSE);
+  $allow_position = variable_get('simple_geo_allow_position_'. $node->type, FALSE);
+  $allow_area = variable_get('simple_geo_allow_area_'. $node->type, FALSE);
 
   switch ($op) {
     case 'delete':
@@ -459,6 +473,72 @@ function simple_geo_area($id, $type) {
   if ($wkt = db_result($res)) {
     return simple_geo_clean_wkt('polygon', $wkt);
   }
+}
+
+/**
+ * Gets the areas that contains the object.
+ *
+ * @param int $nid The id of the object.
+ * @param string $type The type of the object.
+ * @param string $area_type Optional. The type of the areas.
+ * @return array
+ *  An array of areas (only including type if $area_type is NULL)
+ */
+function simple_geo_contained_by($id, $type, $area_type=NULL) {
+  $result = array();
+
+  if (!empty($area_type)) {
+    $res = db_query("SELECT area_nid AS id FROM {simple_geo_in_area}
+      WHERE point_nid = %d
+      AND point_type='%s'
+      AND area_type='%s'",
+        $id, $type, $area_type);
+  }
+  else {
+    $res = db_query("SELECT area_nid AS id, area_type AS type FROM {simple_geo_in_area}
+      WHERE point_nid = %d
+      AND point_type='%s'",
+        $id, $type);
+  }
+
+  while ($area = db_fetch_object($res)) {
+    $result[] = $area;
+  }
+
+  return $result;
+}
+
+/**
+ * Gets the points contained by the area.
+ *
+ * @param int $nid The id of the area.
+ * @param string $type The type of the area.
+ * @param string $object_type Optional. The type of the objects.
+ * @return array
+ *  An array of objects (only including type if $object_type is NULL)
+ */
+function simple_geo_contained($id, $type, $object_type=NULL) {
+  $result = array();
+
+  if (!empty($point_type)) {
+    $res = db_query("SELECT point_nid AS id FROM {simple_geo_in_area}
+      WHERE area_nid = %d
+      AND area_type='%s'
+      AND point_type='%s'",
+        $id, $type, $point_type);
+  }
+  else {
+    $res = db_query("SELECT area_nid AS id, area_type AS type FROM {simple_geo_in_area}
+      WHERE area_nid = %d
+      AND area_type='%s'",
+        $id, $type);
+  }
+
+  while ($area = db_fetch_object($res)) {
+    $result[] = $area;
+  }
+
+  return $result;
 }
 
 /**
@@ -863,4 +943,34 @@ function simple_geo_views_handlers() {
       ),
     ),
   );
+}
+
+/**
+ * Implementation of hook_node_type().
+ */
+function simple_geo_node_type($op, $info) {
+  $vars = array(
+    'simple_geo_allow_area_',
+    'simple_geo_allow_position_',
+    'simple_geo_sync_translations_',
+    'simple_geo_show_in_form',
+  );
+  switch ($op) {
+    case 'delete':
+      foreach ($vars as $var) {
+        variable_del($var . $info->type);
+      }
+      break;
+    case 'update':
+      foreach ($vars as $var) {
+        $option = variable_get($var . $info->type, NULL);
+        if ($option !== NULL) {
+          variable_set($var . $info->type, $option);
+          if (isset($info->old_type)) {
+            variable_del($var . $info->old_type);
+          }
+        }
+      }
+      break;
+  }
 }
