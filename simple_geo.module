@@ -311,6 +311,7 @@ function simple_geo_content_extra_fields($type_name) {
  */
 function simple_geo_apachesolr_update_index(&$doc, $node) {
   if (isset($node->simple_geo_position)) {
+    $doc->setField('ss_simple_geo_position', $node->simple_geo_position);
     $areas = simple_geo_contained_by($node->nid, 'node', 'node');
     if (!empty($areas)) {
       foreach ($areas as $area) {
