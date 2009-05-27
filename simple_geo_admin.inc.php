@@ -73,6 +73,16 @@ function simple_geo_settings() {
     '#default_value' => variable_get('simple_geo_show_map_link', 'always'),
   );
 
+	$array = drupal_map_assoc(range(-1, 17));
+	$array[-1] = "Zoom by multiple points";
+
+  $form['simple_geo_max_zoom'] = array(
+    '#type' => 'select',
+    '#title' => t('Map zoom level'),
+    '#options' => $array,
+    '#default_value' => variable_get('simple_geo_max_zoom', -1),
+  );
+
   $form['simple_geo_add_microformat_tag'] = array(
     '#type' => 'checkbox',
     '#default_value' => variable_get('simple_geo_add_microformat_tag', 1),
@@ -83,6 +93,12 @@ function simple_geo_settings() {
     '#type' => 'checkbox',
     '#default_value' => variable_get('simple_geo_use_microformat_map', 1),
     '#title' => t('Use map to display microformat positions'),
+  );
+
+  $form['simple_geo_manually_load'] = array(
+    '#type' => 'checkbox',
+    '#default_value' => variable_get('simple_geo_manually_load', 1),
+    '#title' => t('Automatically load Google Maps scripts'),
   );
 
   $form['google'] = array(
