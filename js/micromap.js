@@ -53,34 +53,37 @@ if (google && google.load) {
         }
 
         map.addOverlay(marker);
-        GEvent.addListener(marker, "click", function (geo) {
+        GEvent.addListener(marker, "click", function (geo, marker) {
           return function () {
-            var level = geo.parentNode, has_title;
-            while (!(has_title = jQuery(level).children('.simple-geo-title,.title,.views-field-title').length) && level.parentNode) {
+            var level = geo, has_title, title;
+            while (!(has_title = (title = jQuery(level).children('.simple-geo-title,.title,.views-field-title')).length) && level.parentNode) {
               level = level.parentNode;
             }
             if (!has_title) {
               level = geo.parentNode;
-            }
-            if (!level.id) {
-              level.id = 'micromap-' + (tmp_ids);
-              tmp_ids = tmp_ids + 1;
-            }
-            window.location.hash = '#' + level.id;
+              if (!level.id) {
+                level.id = 'micromap-' + (tmp_ids);
+                tmp_ids = tmp_ids + 1;
+              }
+              window.location.hash = '#' + level.id;
 
-            if (map_highlight) {
-              jQuery(map_highlight).removeClass('micromap-highlight');
-            }
-            jQuery(level).addClass('micromap-highlight');
-            map_highlight = level;
+              if (map_highlight) {
+                jQuery(map_highlight).removeClass('micromap-highlight');
+              }
+              jQuery(level).addClass('micromap-highlight');
+              map_highlight = level;
 
-            jQuery(level).css({ backgroundImage: 'none' }).animate({ backgroundColor: "#FFFFAA" }, 1000, function () {
-              jQuery(this).animate({ backgroundColor: "#FFFFFF" }, 1000, function () {
-                jQuery(this).css({ backgroundImage: '', backgroundColor: '' });
+              jQuery(level).css({ backgroundImage: 'none' }).animate({ backgroundColor: "#FFFFAA" }, 1000, function () {
+                jQuery(this).animate({ backgroundColor: "#FFFFFF" }, 1000, function () {
+                  jQuery(this).css({ backgroundImage: '', backgroundColor: '' });
+                });
               });
-            });
+            }
+            else {
+              map.openInfoWindow(marker.getLatLng(),title.get(0).cloneNode(true));
+            }
           };
-        }(positions.get(i)));
+        }(positions.get(i), marker));
 
         jQuery(positions.get(i).parentNode).find('a[rel=map]').click(function (m) {
           return function () {
