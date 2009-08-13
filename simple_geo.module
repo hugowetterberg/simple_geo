@@ -12,49 +12,48 @@ define('SIMPLE_GEO_COORDINATE_SEPARATOR', ' ');
 require('includes/simple_geo_themeable_functions.php');
 
 function simple_geo_init() {
-	if (variable_get('simple_geo_manually_load', 0)) {
-		simple_geo_load();
-	}
+  if (variable_get('simple_geo_manually_load', 0)) {
+    simple_geo_load();
+  }
 }
 
 function simple_geo_load() {
-	$settings = array();
-
   static $loaded;
+  $settings = array();
 
-	if(empty($loaded)) {
-	  $def_pos = variable_get('simple_geo_default_position', 0);
-	  if ($def_pos) {
-	    $settings['simple_geo_default_position'] = $def_pos;
-	  }
-	  $max_zoom = variable_get('simple_geo_max_zoom', -1);
-	  if ($max_zoom != -1) {
-	    $settings['simple_geo_max_zoom'] = $max_zoom;
-	  }
-	  $gc_suffix = variable_get('simple_geo_geocoding_suffix', '');
-	  if (!empty($gc_suffix)) {
-	    $settings['simple_geo_geocoding_suffix'] = $gc_suffix;
-	  }
+  if(empty($loaded)) {
+    $def_pos = variable_get('simple_geo_default_position', 0);
+    if ($def_pos) {
+      $settings['simple_geo_default_position'] = $def_pos;
+    }
+    $max_zoom = variable_get('simple_geo_max_zoom', 14);
+    if ($max_zoom != -1) {
+      $settings['simple_geo_max_zoom'] = $max_zoom;
+    }
+    $gc_suffix = variable_get('simple_geo_geocoding_suffix', '');
+    if (!empty($gc_suffix)) {
+      $settings['simple_geo_geocoding_suffix'] = $gc_suffix;
+    }
 
-	  $settings['simple_geo_micromap_parent'] = variable_get('simple_geo_micromap_parent', '#main-inner');
-	  $settings['simple_geo_micromap_add_mode'] = variable_get('simple_geo_micromap_add_mode', 'prepend');
+    $settings['simple_geo_micromap_parent'] = variable_get('simple_geo_micromap_parent', '#main-inner');
+    $settings['simple_geo_micromap_add_mode'] = variable_get('simple_geo_micromap_add_mode', 'prepend');
 
-	  if (!empty($settings)) {
-	    drupal_add_js($settings, 'setting');
-	  }
+    if (!empty($settings)) {
+      drupal_add_js($settings, 'setting');
+    }
 
-	  $api_key = variable_get('gmaps_api_key', False);
-	  if ($api_key) {
-	    if (variable_get('simple_geo_use_microformat_map', 1)) {
-	      drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/LookupControl.js', 'module', 'header');
-	      drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/micromap.js', 'module', 'header');
-	    }
-	    if (variable_get('simple_geo_add_google_jsapi', 1)) {
-	      drupal_set_html_head('<script type="text/javascript" src="http://www.google.com/jsapi?key='. $api_key .'"></script>');
-	    }
-	  }
-		$loaded = TRUE;
-	}
+    $api_key = variable_get('gmaps_api_key', False);
+    if ($api_key) {
+      if (variable_get('simple_geo_use_microformat_map', 1)) {
+        drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/LookupControl.js', 'module', 'header');
+        drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/micromap.js', 'module', 'header');
+      }
+      if (variable_get('simple_geo_add_google_jsapi', 1)) {
+        drupal_set_html_head('<script type="text/javascript" src="http://www.google.com/jsapi?key='. $api_key .'"></script>');
+      }
+    }
+    $loaded = TRUE;
+  }
 }
 
 /**
@@ -282,7 +281,7 @@ function simple_geo_form_alter(&$form, $form_state, $form_id) {
 }
 
 function simple_geo_add_form_js($form) {
-	simple_geo_load();
+  simple_geo_load();
   drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/LookupControl.js', 'module', 'header');
   drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/edit.js', 'module', 'header');
   theme('simple_geo_form_css');

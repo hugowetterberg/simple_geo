@@ -26,15 +26,44 @@ function simple_geo_settings() {
     ),
   );
 
-  $form['simple_geo_position_users'] = array(
+  $form['node_set'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Node rendering'),
+  );
+
+  $form['node_set']['simple_geo_position_users'] = array(
     '#type' => 'checkbox',
     '#default_value' => variable_get('simple_geo_position_users', 1),
     '#title' => t('Enable user positioning'),
   );
 
+  $form['node_set']['simple_geo_show_map_link'] = array(
+    '#type' => 'select',
+    '#title' => t('Show map links for nodes'),
+    '#options' => array(
+      'always' => t('Always'),
+      'teaser' => t('In teaser'),
+      'full' => t('When viewing full node'),
+      'never' => t('Never'),
+    ),
+    '#default_value' => variable_get('simple_geo_show_map_link', 'always'),
+  );
+
+  $form['node_set']['simple_geo_add_microformat_tag'] = array(
+    '#type' => 'checkbox',
+    '#default_value' => variable_get('simple_geo_add_microformat_tag', 1),
+    '#title' => t('Show microformat tag for node positions'),
+  );
+
   $form['micromap_set'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Micromap placement'),
+    '#title' => t('Micromap'),
+  );
+
+  $form['micromap_set']['simple_geo_use_microformat_map'] = array(
+    '#type' => 'checkbox',
+    '#default_value' => variable_get('simple_geo_use_microformat_map', 1),
+    '#title' => t('Use map to display microformat positions'),
   );
 
   $form['micromap_set']['simple_geo_micromap_parent'] = array(
@@ -42,6 +71,12 @@ function simple_geo_settings() {
     '#default_value' => variable_get('simple_geo_micromap_parent', '#main-inner'),
     '#title' => t('Parent element'),
     '#description' => t('The jQuery expression that should be used to find the micromap parent'),
+  );
+
+  $form['micromap_set']['simple_geo_use_microformat_map'] = array(
+    '#type' => 'checkbox',
+    '#default_value' => variable_get('simple_geo_use_microformat_map', 1),
+    '#title' => t('Use map to display microformat positions'),
   );
 
   $form['micromap_set']['simple_geo_micromap_add_mode'] = array(
@@ -54,57 +89,32 @@ function simple_geo_settings() {
     '#default_value' => variable_get('simple_geo_micromap_add_mode', 'prepend'),
   );
 
-  $form['simple_geo_geocoding_suffix'] = array(
+  $form['micromap_set']['simple_geo_geocoding_suffix'] = array(
     '#type' => 'textfield',
     '#default_value' => variable_get('simple_geo_geocoding_suffix', ''),
     '#title' => t('Geocoding suffix'),
     '#description' => t('Any suffix entered here will be appended to the address with a separating comma before a geocoding lookup is performed'),
   );
 
-  $form['simple_geo_show_map_link'] = array(
-    '#type' => 'select',
-    '#title' => t('Show map links for nodes'),
-    '#options' => array(
-      'always' => t('Always'),
-      'teaser' => t('In teaser'),
-      'full' => t('When viewing full node'),
-      'never' => t('Never'),
-    ),
-    '#default_value' => variable_get('simple_geo_show_map_link', 'always'),
-  );
+  $array = drupal_map_assoc(range(1, 17));
 
-	$array = drupal_map_assoc(range(-1, 17));
-	$array[-1] = "Zoom by multiple points";
-
-  $form['simple_geo_max_zoom'] = array(
+  $form['micromap_set']['simple_geo_max_zoom'] = array(
     '#type' => 'select',
-    '#title' => t('Map zoom level'),
+    '#title' => t('Max zoom level'),
     '#options' => $array,
-    '#default_value' => variable_get('simple_geo_max_zoom', -1),
-  );
-
-  $form['simple_geo_add_microformat_tag'] = array(
-    '#type' => 'checkbox',
-    '#default_value' => variable_get('simple_geo_add_microformat_tag', 1),
-    '#title' => t('Show microformat tag for node positions'),
-  );
-
-  $form['simple_geo_use_microformat_map'] = array(
-    '#type' => 'checkbox',
-    '#default_value' => variable_get('simple_geo_use_microformat_map', 1),
-    '#title' => t('Use map to display microformat positions'),
-  );
-
-  $form['simple_geo_manually_load'] = array(
-    '#type' => 'checkbox',
-    '#default_value' => variable_get('simple_geo_manually_load', 1),
-    '#title' => t('Automatically load Google Maps scripts'),
+    '#default_value' => variable_get('simple_geo_max_zoom', 14),
   );
 
   $form['google'] = array(
     '#type' => 'fieldset',
     '#title' => t('Google maps'),
     '#description' => t('Google Maps must be configured for most of the simple_geo functionality'),
+  );
+
+  $form['google']['simple_geo_manually_load'] = array(
+    '#type' => 'checkbox',
+    '#default_value' => variable_get('simple_geo_manually_load', 1),
+    '#title' => t('Automatically load Google Maps scripts'),
   );
 
   $form['google']['gmaps_api_key'] = array(
