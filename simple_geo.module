@@ -22,6 +22,8 @@ function simple_geo_load() {
   $settings = array();
 
   if(empty($loaded)) {
+    drupal_add_css(drupal_get_path('module', 'simple_geo') .'/css/simple_geo.css');
+
     $def_pos = variable_get('simple_geo_default_position', 0);
     if ($def_pos) {
       $settings['simple_geo_default_position'] = $def_pos;

@@ -6,7 +6,7 @@ if (google && google.load) {
   google.load('maps', '2.x');
 
   jQuery(document).ready(function () {
-    var positions, map_highlight, placeholder, map, icon, tmp_ids, bounds, pos_len, i, lat, lng, pos, marker, default_zoom, default_center, map_state, placeholder_html, micromap_parent, micromap_add_mode;
+    var positions, info_window, info_window_content, map_highlight, placeholder, map, icon, tmp_ids, bounds, pos_len, i, lat, lng, pos, marker, default_zoom, default_center, map_state, placeholder_html, micromap_parent, micromap_add_mode;
 
     positions = jQuery('.geo');
 
@@ -80,7 +80,14 @@ if (google && google.load) {
               });
             }
             else {
-              map.openInfoWindow(marker.getLatLng(),title.get(0).cloneNode(true));
+              var pos = map.fromLatLngToContainerPixel(marker.getLatLng());
+              info_window_content.empty().append(title.get(0).cloneNode(true));
+              var widget_offset = $(placeholder).offset();
+              info_window.css({
+                'position': 'absolute',
+                'top': pos.y + widget_offset.top,
+                'left': pos.x + widget_offset.left
+              }).show();
             }
           };
         }(positions.get(i), marker));
@@ -120,6 +127,18 @@ if (google && google.load) {
         }
         map.checkResize();
         map.setCenter(center);
+        info_window.hide();
+      });
+
+      info_window = $('<div id="micro-map-info-window"><div id="micro-map-info-content"></div></div>').appendTo('body');
+      info_window.hide();
+      info_window_content = $('#micro-map-info-content');
+      $('<a class="close_link">' + Drupal.t('Close') + '</a>').appendTo(info_window).click(function(){info_window.hide();});
+      GEvent.addListener(map, "movestart", function(){
+        info_window.hide();
+      });
+      GEvent.addListener(map, "click", function(){
+        info_window.hide();
       });
     }
   });
