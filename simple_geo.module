@@ -28,10 +28,10 @@ function simple_geo_load() {
     if ($def_pos) {
       $settings['simple_geo_default_position'] = $def_pos;
     }
+    $min_zoom = variable_get('simple_geo_min_zoom', 1);
     $max_zoom = variable_get('simple_geo_max_zoom', 14);
-    if ($max_zoom != -1) {
-      $settings['simple_geo_max_zoom'] = $max_zoom;
-    }
+    $settings['simple_geo_min_zoom'] = $min_zoom;
+    $settings['simple_geo_max_zoom'] = $max_zoom;
     $gc_suffix = variable_get('simple_geo_geocoding_suffix', '');
     if (!empty($gc_suffix)) {
       $settings['simple_geo_geocoding_suffix'] = $gc_suffix;

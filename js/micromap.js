@@ -103,10 +103,14 @@ if (google && google.load) {
         bounds.extend(pos);
       }
 
-      default_zoom = map.getBoundsZoomLevel(bounds) - 1;
+      default_zoom = map.getBoundsZoomLevel(bounds);
       if(Drupal.settings.simple_geo_max_zoom < default_zoom){
         default_zoom = Drupal.settings.simple_geo_max_zoom;
       }
+      if(Drupal.settings.simple_geo_min_zoom > default_zoom){
+        default_zoom = Drupal.settings.simple_geo_min_zoom;
+      }
+      console.log(default_zoom);
       default_center = bounds.getCenter();
       map.setCenter(default_center, Number(default_zoom));
 

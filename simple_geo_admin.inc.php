@@ -108,6 +108,15 @@ function simple_geo_settings() {
     '#title' => t('Max zoom level'),
     '#options' => $array,
     '#default_value' => variable_get('simple_geo_max_zoom', 14),
+    '#description' => t('This affects only the zoom level that\'s automatically chosen by the micromap'),
+  );
+
+  $form['micromap_set']['simple_geo_min_zoom'] = array(
+    '#type' => 'select',
+    '#title' => t('Minimum zoom level'),
+    '#options' => $array,
+    '#default_value' => variable_get('simple_geo_min_zoom', 1),
+    '#description' => t('This affects only the zoom level that\'s automatically chosen by the micromap'),
   );
 
   $form['google'] = array(
