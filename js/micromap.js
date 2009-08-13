@@ -99,7 +99,6 @@ if (google && google.load) {
 				default_zoom = max_zoom;
 			}
       default_center = bounds.getCenter();
-			console.log(default_zoom, max_zoom);
       map.setCenter(default_center, Number(default_zoom));
 
       map_state = 0;
