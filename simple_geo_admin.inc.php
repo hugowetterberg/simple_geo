@@ -26,15 +26,20 @@ function simple_geo_settings() {
     ),
   );
 
-  $form['node_set'] = array(
+  $form['user_set'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Node rendering'),
+    '#title' => t('Users'),
   );
 
-  $form['node_set']['simple_geo_position_users'] = array(
+  $form['user_set']['simple_geo_position_users'] = array(
     '#type' => 'checkbox',
     '#default_value' => variable_get('simple_geo_position_users', 1),
     '#title' => t('Enable user positioning'),
+  );
+
+  $form['node_set'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Node rendering'),
   );
 
   $form['node_set']['simple_geo_show_map_link'] = array(
