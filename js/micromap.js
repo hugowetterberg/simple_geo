@@ -94,7 +94,7 @@ if (google && google.load) {
 
         jQuery(positions.get(i).parentNode).find('a[rel=map]').click(function (m) {
           return function () {
-            map.setCenter(m.getLatLng(), Math.max(map.getZoom(), 14));
+            map.setCenter(m.getLatLng(), Math.max(map.getZoom(), Drupal.settings.simple_geo_max_zoom));
           };
         }(marker)).each(function () {
           jQuery(this).attr('href', '#micro-map');
