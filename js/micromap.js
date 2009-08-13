@@ -56,7 +56,7 @@ if (google && google.load) {
         GEvent.addListener(marker, "click", function (geo) {
           return function () {
             var level = geo.parentNode, has_title;
-            while (!(has_title = jQuery(level).children('.title,.views-field-title').length) && level.parentNode) {
+            while (!(has_title = jQuery(level).children('.simple-geo-title,.title,.views-field-title').length) && level.parentNode) {
               level = level.parentNode;
             }
             if (!has_title) {
