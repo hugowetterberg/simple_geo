@@ -336,6 +336,7 @@ function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
     case 'delete':
       simple_geo_delete_position($node->nid, 'node');
       simple_geo_delete_area($node->nid, 'node');
+      simple_geo_delete_from_cache($node->nid, 'node');
       break;
     case 'prepare translation':
       $src = $node->translation_source;
@@ -543,6 +544,13 @@ function simple_geo_contained($id, $type, $object_type=NULL) {
   return $result;
 }
 
+function simple_geo_delete_from_cache($id, $type) {
+  db_query("DELETE FROM {simple_geo_in_area}
+    WHERE (point_nid = %d AND point_type='%s')
+    OR (area_nid = %d AND area_type='%s')",
+    $id, $type, $id, $type);
+}
+
 /**
  * Updates the cache for the spatial relationship between points and polygons
  *
@@ -559,10 +567,7 @@ function simple_geo_update_cache($id, $type, $op='all') {
   $op_area = $op_all || $op == 'area';
   if ($op_all) {
     //Delete all cache entries
-    db_query("DELETE FROM {simple_geo_in_area}
-      WHERE (point_nid = %d AND point_type='%s')
-      OR (area_nid = %d AND area_type='%s')",
-      $id, $type, $id, $type);
+    simple_geo_delete_from_cache($id, $type);
   }
   else if ($op_point) {
     //Delete all position cache entries
