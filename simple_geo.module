@@ -30,6 +30,8 @@ function simple_geo_load() {
     }
     $min_zoom = variable_get('simple_geo_min_zoom', 1);
     $max_zoom = variable_get('simple_geo_max_zoom', 14);
+    $search_address = variable_get('simple_geo_search_address', 1);
+    $settings['simple_geo_search_address'] = $search_address;
     $settings['simple_geo_min_zoom'] = $min_zoom;
     $settings['simple_geo_max_zoom'] = $max_zoom;
     $gc_suffix = variable_get('simple_geo_geocoding_suffix', '');

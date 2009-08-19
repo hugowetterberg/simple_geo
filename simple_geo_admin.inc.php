@@ -37,6 +37,12 @@ function simple_geo_settings() {
     '#title' => t('Enable user positioning'),
   );
 
+  $form['user_set']['simple_geo_search_address'] = array(
+    '#type' => 'checkbox',
+    '#default_value' => variable_get('simple_geo_search_address', 1),
+    '#title' => t('Enable "Search for address" field'),
+  );
+
   $form['node_set'] = array(
     '#type' => 'fieldset',
     '#title' => t('Node rendering'),

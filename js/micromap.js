@@ -13,7 +13,7 @@ if (google && google.load) {
     if (positions.length > 0) {
       placeholder = document.getElementById('micro-map-widget');
       if (!placeholder) {
-        placeholder_html = '<div id="micro-map" class="small"><h2 class="title">' + Drupal.t('Map') + '</h2><div id="micro-map-widget"></div>' + '<span class="button" id="micro-map-size"><strong>&lt; ' + Drupal.t('Wider map') + '</strong></span></div>';
+        placeholder_html = '<div id="micro-map" class="small"><h2 class="title">' + Drupal.t('Map') + '</h2><div id="micro-map-widget"></div>' + '<span class="button" id="micro-map-size"><a href="#" class="micro-map-link">&lt; ' + Drupal.t('Wider map') + '</a></span></div>';
         micromap_parent = Drupal.settings.simple_geo_micromap_parent ? Drupal.settings.simple_geo_micromap_parent : '#main-inner';
         micromap_add_mode = Drupal.settings.simple_geo_micromap_add_mode ? Drupal.settings.simple_geo_micromap_add_mode : 'prepend';
 
@@ -37,7 +37,9 @@ if (google && google.load) {
         icon.image = Drupal.settings.user_map.favicon_path + '/default/0/marker.png';
       }
 
-      map.addControl(new LookupControl());
+      if(Drupal.settings.simple_geo_search_address) {
+        map.addControl(new LookupControl());
+      }
 
       tmp_ids = 0;
       bounds = new GLatLngBounds();
@@ -114,8 +116,9 @@ if (google && google.load) {
       map.setCenter(default_center, Number(default_zoom));
 
       map_state = 0;
-      jQuery('#micro-map-size').click(function () {
+      jQuery('#micro-map-size').click(function(e) {
         var center = map.getCenter();
+        e.preventDefault();
         switch (map_state) {
         case 0:
           jQuery(this).find('*').text(Drupal.t('Smaller map') + ' >');
