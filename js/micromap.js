@@ -13,7 +13,7 @@ if (google && google.load) {
     if (positions.length > 0) {
       placeholder = document.getElementById('micro-map-widget');
       if (!placeholder) {
-        placeholder_html = '<div id="micro-map" class="small"><h2 class="title">' + Drupal.t('Map') + '</h2><div id="micro-map-widget"></div>' + '<span class="button" id="micro-map-size"><a href="#" class="micro-map-link">&lt; ' + Drupal.t('Wider map') + '</a></span></div>';
+        placeholder_html = '<div id="micro-map" class="small"><h2 class="title">' + Drupal.t('Map') + '</h2><div id="micro-map-widget"></div>' + '<span class="button" id="micro-map-size"><a href="#" class="micro-map-size-link">&lt; ' + Drupal.t('Wider map') + '</a></span></div>';
         micromap_parent = Drupal.settings.simple_geo_micromap_parent ? Drupal.settings.simple_geo_micromap_parent : '#main-inner';
         micromap_add_mode = Drupal.settings.simple_geo_micromap_add_mode ? Drupal.settings.simple_geo_micromap_add_mode : 'prepend';
 
