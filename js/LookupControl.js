@@ -52,7 +52,7 @@ if (google && google.load) {
               else {
                 lookup_marker.setLatLng(coord);
               }
-              map.setCenter(coord, Math.max(14, map.getZoom() - 1));
+              map.setCenter(coord, Math.max(map.getZoom(), Drupal.settings.simple_geo_max_zoom));
             }
           }
         });
