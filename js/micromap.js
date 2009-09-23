@@ -6,6 +6,7 @@ if (google && google.load) {
   google.load('maps', '2.x');
 
   jQuery(document).ready(function () {
+
     var positions, info_window, info_window_content, map_highlight, placeholder, map, icon, tmp_ids, bounds, pos_len, i, lat, lng, pos, marker, default_zoom, default_center, map_state, placeholder_html, micromap_parent, micromap_add_mode;
 
     positions = jQuery('.geo');

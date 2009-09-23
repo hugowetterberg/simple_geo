@@ -46,8 +46,10 @@ if (google && google.load) {
             jQuery(container).trigger('positioned', coord);
             if (!control.custom_marker_handling) {
               if (!lookup_marker) {
-                lookup_marker = new google.maps.Marker(coord, {'icon' : lookup_icon});
-                map.addOverlay(lookup_marker);
+                if(Drupal.settings.simple_geo_search_address_icon) {
+                  lookup_marker = new google.maps.Marker(coord, {'icon' : lookup_icon});
+                  map.addOverlay(lookup_marker);
+                }
               }
               else {
                 lookup_marker.setLatLng(coord);

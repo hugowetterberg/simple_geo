@@ -54,6 +54,7 @@ function simple_geo_uninstall() {
     'simple_geo_add_google_jsapi',
     'simple_geo_position_users',
     'simple_geo_search_address',
+    'simple_geo_search_address_icon',
     'simple_geo_show_map_link',
     'simple_geo_add_microformat_tag',
   );

@@ -43,6 +43,12 @@ function simple_geo_settings() {
     '#title' => t('Enable "Search for address" field'),
   );
 
+  $form['user_set']['simple_geo_search_address_icon'] = array(
+    '#type' => 'checkbox',
+    '#default_value' => variable_get('simple_geo_search_address_icon', 1),
+    '#title' => t('Enable marker icon for search result'),
+  );
+
   $form['node_set'] = array(
     '#type' => 'fieldset',
     '#title' => t('Node rendering'),
