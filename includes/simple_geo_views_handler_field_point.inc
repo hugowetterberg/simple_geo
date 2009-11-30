@@ -31,6 +31,12 @@ class simple_geo_views_handler_field_point extends views_handler_field {
       '#title' => t('Output with map link'),
       '#default_value' => isset($this->options['output_with_map_link']) && $this->options['output_with_map_link'],
     );
+
+    $form['output_raw'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Output raw coordinates'),
+      '#default_value' => isset($this->options['output_raw']) && $this->options['output_raw'],
+    );
   }
 
   /**
@@ -44,13 +50,18 @@ class simple_geo_views_handler_field_point extends views_handler_field {
       return;
     }
     $coords = explode(' ', simple_geo_clean_wkt('point', $values->{$this->field_alias}));
-    $output = '<span class="geo"><span class="latitude">' . ((float) $coords[0]) . '</span> <span class="longitude">' . ((float) $coords[1]) . '</span></span>';
-    if ($this->options['output_with_map_link']) {
-      $output .= l(t('Show on map'), 'node/' . $values->nid . '/map', array(
-        'attributes' => array(
-          'rel' => 'map',
-        ),
-      ));
+    if ($this->options['output_raw']) {
+      $output = join($coords, ' ');
+    }
+    else {
+      $output = '<span class="geo"><span class="latitude">' . ((float) $coords[0]) . '</span> <span class="longitude">' . ((float) $coords[1]) . '</span></span>';
+      if ($this->options['output_with_map_link']) {
+        $output .= l(t('Show on map'), 'node/' . $values->nid . '/map', array(
+          'attributes' => array(
+            'rel' => 'map',
+          ),
+        ));
+      }
     }
     return $output;
   }
