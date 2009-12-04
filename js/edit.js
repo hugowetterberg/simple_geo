@@ -64,7 +64,7 @@ if (google && google.load) {
     if (!position) {
       position = default_position();
     }
-    map.setCenter(position, 13);
+    map.setCenter(position, Number(Drupal.settings.simple_geo_min_zoom));
 
     //Create our marker and make it draggable
     if (Drupal.settings.user_map) {
@@ -82,7 +82,7 @@ if (google && google.load) {
     jQuery('<a class="form-button" href="#" title="' + resetDesc + '"><span>' + resetButton + '</span></a>').appendTo(resetBox).click(function () {
       var def = default_position();
       marker.setLatLng(def);
-      map.setCenter(def, 13);
+      map.setCenter(def, Number(Drupal.settings.simple_geo_min_zoom));
       jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value', '');
       return false;
     }).after('<span class="description">' + resetDesc + '</span>');
@@ -91,7 +91,7 @@ if (google && google.load) {
     map.addControl(lookup);
     jQuery(lookup.container).bind('positioned', function (evt, coord) {
       marker.setLatLng(coord);
-      map.setCenter(coord, 13);
+      map.setCenter(coord, Number(Drupal.settings.simple_geo_max_zoom));
       jQuery('#edit-simple-geo-position-wrapper input[type=text]').val(wkt_coord(coord));
     });
     resetBox.insertAfter(placeholder);
@@ -113,7 +113,7 @@ if (google && google.load) {
           function (res, err) {
             if (res && res.simple_geo_position) {
               var position = wkt_to_latlng(res.simple_geo_position);
-              map.setCenter(position, 13);
+              map.setCenter(position, Number(Drupal.settings.simple_geo_max_zoom));
               marker.setLatLng(position);
               jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value', res.simple_geo_position);
             }
