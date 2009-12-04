@@ -18,15 +18,22 @@ if (google && google.load) {
         micromap_parent = Drupal.settings.simple_geo_micromap_parent ? Drupal.settings.simple_geo_micromap_parent : '#main-inner';
         micromap_add_mode = Drupal.settings.simple_geo_micromap_add_mode ? Drupal.settings.simple_geo_micromap_add_mode : 'prepend';
 
-        if (micromap_add_mode == 'prepend') {
-          jQuery(micromap_parent).prepend(placeholder_html);
-        }
-        else {
-          jQuery(micromap_parent).append(placeholder_html);
-        }
+        if (jQuery(micromap_parent).length > 0) {
+          if (micromap_add_mode == 'prepend') {
+            jQuery(micromap_parent).prepend(placeholder_html);
+          }
+          else {
+            jQuery(micromap_parent).append(placeholder_html);
+          }
 
-        placeholder = document.getElementById('micro-map-widget');
+          placeholder = document.getElementById('micro-map-widget');
+        };
       }
+
+      if (!placeholder) {
+        return;
+      }
+
       map = new google.maps.Map2(placeholder);
       map.addControl(new GSmallMapControl());
 
