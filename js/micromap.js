@@ -14,7 +14,7 @@ if (google && google.load) {
     if (positions.length > 0) {
       placeholder = document.getElementById('micro-map-widget');
       if (!placeholder) {
-        placeholder_html = '<div id="micro-map" class="small"><h2 class="title">' + Drupal.t('Map') + '</h2><div id="micro-map-widget"></div>' + '<span class="button" id="micro-map-size"><a href="#" class="micro-map-size-link">&lt; ' + Drupal.t('Wider map') + '</a></span></div>';
+        placeholder_html = '<div id="micro-map" class="small"><h2 class="title">' + Drupal.t('Map') + '</h2><div id="micro-map-widget"></div>' + '<span class="button small" id="micro-map-size"><a href="#" class="micro-map-size-link">' + Drupal.t('Wider map') + '</a></span></div>';
         micromap_parent = Drupal.settings.simple_geo_micromap_parent ? Drupal.settings.simple_geo_micromap_parent : '#main-inner';
         micromap_add_mode = Drupal.settings.simple_geo_micromap_add_mode ? Drupal.settings.simple_geo_micromap_add_mode : 'prepend';
 
@@ -122,13 +122,15 @@ if (google && google.load) {
         e.preventDefault();
         switch (map_state) {
         case 0:
-          jQuery(this).find('*').text(Drupal.t('Smaller map') + ' >');
+          jQuery(this).find('*').text(Drupal.t('Smaller map'));
           jQuery('#micro-map').removeClass('small').addClass('large');
+          jQuery('#micro-map-size').removeClass('small').addClass('large');
           map_state = 1;
           break;
         case 1:
-          jQuery(this).find('*').text('< ' + Drupal.t('Wider map'));
+          jQuery(this).find('*').text(Drupal.t('Wider map'));
           jQuery('#micro-map').addClass('small').removeClass('large');
+          jQuery('#micro-map-size').addClass('small').removeClass('large');
           map_state = 0;
           break;
         }
