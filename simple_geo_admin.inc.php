@@ -7,6 +7,8 @@
  */
 
 function simple_geo_settings() {
+  drupal_add_css(drupal_get_path('module', 'simple_geo') .'/css/simple_geo_admin.css');
+
   $form = array();
 
   $form['position_set'] = array(
@@ -129,6 +131,20 @@ function simple_geo_settings() {
     '#options' => $array,
     '#default_value' => variable_get('simple_geo_min_zoom', 1),
     '#description' => t('This affects only the zoom level that\'s automatically chosen by the micromap'),
+  );
+
+  $form['micromap_set']['simple_geo_overview_map_show'] = array(
+    '#type' => 'checkbox',
+    '#default_value' => variable_get('simple_geo_overview_map_show', 0),
+    '#title' => t('Show folded in overview map in lower right corner'),
+  );
+
+  $form['micromap_set']['simple_geo_overview_map_size'] = array(
+    '#type' => 'textfield',
+    '#default_value' => variable_get('simple_geo_overview_map_size', 150),
+    '#title' => t('Overview map size'),
+    '#description' => t('Choose the width/height of the overview map'),
+    '#field_suffix' => 'px',
   );
 
   $form['google'] = array(

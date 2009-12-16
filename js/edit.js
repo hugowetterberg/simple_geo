@@ -1,6 +1,6 @@
 // $Id$
 
-/*global google, jQuery, Drupal, GSmallMapControl, GIcon, G_DEFAULT_ICON, GSize, GPoint, GMarker, LookupControl, GEvent, GPolygon */
+/*global google, jQuery, Drupal, GSmallMapControl, GOverviewMapControl, GIcon, G_DEFAULT_ICON, GSize, GPoint, GMarker, LookupControl, GEvent, GPolygon */
 
 if (google && google.load) {
   google.load('maps', '2.x');
@@ -52,6 +52,12 @@ if (google && google.load) {
     map = new google.maps.Map2(placeholder);
     map.addControl(new GSmallMapControl());
 
+    if (Drupal.settings.simple_geo_overview_map_show) {
+      var size = Drupal.settings.simple_geo_overview_map_size;
+      var ovcontrol = new GOverviewMapControl(new GSize(size,size));
+      map.addControl(ovcontrol);
+    }
+
     //Get coordinate data
     aCoords = jQuery('#edit-simple-geo-area').attr('value');
     pCoords = jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value');
@@ -79,7 +85,7 @@ if (google && google.load) {
     resetButton = Drupal.t('Remove position');
     resetDesc = Drupal.t('Resets the marker to default position');
     marker = new GMarker(position, {draggable: true, icon: icon});
-    jQuery('<a class="form-button" href="#" title="' + resetDesc + '"><span>' + resetButton + '</span></a>').appendTo(resetBox).click(function () {
+    jQuery('<span class="remove-button"><a class="form-button" href="#" title="' + resetDesc + '">' + resetButton + '</a></span>').appendTo(resetBox).click(function () {
       var def = default_position();
       marker.setLatLng(def);
       map.setCenter(def, 13);

@@ -1,6 +1,6 @@
 // $Id$
 
-/*global google, jQuery, Drupal, GSmallMapControl, GIcon, G_DEFAULT_ICON, GSize, GPoint, LookupControl, GLatLngBounds, GLatLng, GEvent */
+/*global google, jQuery, Drupal, GSmallMapControl, GOverviewMapControl, GIcon, G_DEFAULT_ICON, GSize, GPoint, LookupControl, GLatLngBounds, GLatLng, GEvent */
 
 if (google && google.load) {
   google.load('maps', '2.x');
@@ -29,6 +29,14 @@ if (google && google.load) {
       }
       map = new google.maps.Map2(placeholder);
       map.addControl(new GSmallMapControl());
+
+      console.log(Drupal.settings.simple_geo_show_overview_map);
+
+      if (Drupal.settings.simple_geo_overview_map_show) {
+        var size = Drupal.settings.simple_geo_overview_map_size;
+        var ovcontrol = new GOverviewMapControl(new GSize(size,size));
+        map.addControl(ovcontrol);
+      }
 
       icon = new GIcon(G_DEFAULT_ICON);
       if (Drupal.settings.user_map) {
