@@ -57,6 +57,11 @@ function simple_geo_uninstall() {
     'simple_geo_search_address_icon',
     'simple_geo_show_map_link',
     'simple_geo_add_microformat_tag',
+    'simple_geo_min_zoom',
+    'simple_geo_max_zoom',
+    'simple_geo_overview_map_show',
+    'simple_geo_overview_map_size',
+    'simple_geo_manually_load',
   );
 
   foreach ($vars as $var) {
