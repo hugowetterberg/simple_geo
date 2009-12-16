@@ -117,33 +117,42 @@ function simple_geo_settings() {
 
   $array = drupal_map_assoc(range(1, 17));
 
-  $form['micromap_set']['simple_geo_max_zoom'] = array(
-    '#type' => 'select',
-    '#title' => t('Max zoom level'),
-    '#options' => $array,
-    '#default_value' => variable_get('simple_geo_max_zoom', 14),
-    '#description' => t('This affects only the zoom level that\'s automatically chosen by the micromap'),
-  );
+  // $form['micromap_set']['simple_geo_zoom_title'] = array(
+  //   '#type' => 'item',
+  //   '#title' => 'Zoom level',
+  // );
 
   $form['micromap_set']['simple_geo_min_zoom'] = array(
     '#type' => 'select',
-    '#title' => t('Minimum zoom level'),
+    '#prefix' => '<div id="edit-simple-geo-zoom-level" class="form-item"><label>' . t('Zoom level') . '</label></div>',
+    '#title' => t('Min'),
     '#options' => $array,
     '#default_value' => variable_get('simple_geo_min_zoom', 1),
+  );
+
+  $form['micromap_set']['simple_geo_max_zoom'] = array(
+    '#type' => 'select',
+    '#title' => t('Max'),
+    '#options' => $array,
+    '#default_value' => variable_get('simple_geo_max_zoom', 14),
+  );
+
+  $form['micromap_set']['simple_geo_zoom_desc'] = array(
+    '#type' => 'item',
     '#description' => t('This affects only the zoom level that\'s automatically chosen by the micromap'),
   );
 
   $form['micromap_set']['simple_geo_overview_map_show'] = array(
     '#type' => 'checkbox',
     '#default_value' => variable_get('simple_geo_overview_map_show', 0),
-    '#title' => t('Show folded in overview map in lower right corner'),
+    '#title' => t('Show overview map in lower right corner'),
   );
 
   $form['micromap_set']['simple_geo_overview_map_size'] = array(
     '#type' => 'textfield',
     '#default_value' => variable_get('simple_geo_overview_map_size', 150),
     '#title' => t('Overview map size'),
-    '#description' => t('Choose the width/height of the overview map'),
+    '#description' => t('Choose the size of the overview map, (value x value)'),
     '#field_suffix' => 'px',
   );
 
