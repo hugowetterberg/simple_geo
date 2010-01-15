@@ -2,13 +2,46 @@
 
 /*global google, jQuery, Drupal, GSmallMapControl, GIcon, G_DEFAULT_ICON, GSize, GPoint, GMarker, LookupControl, GEvent, GPolygon */
 
+function EditControl(position, polygon, custom_marker_handling) {
+  this.position = position;
+  this.polygon = polygon;
+  this.custom_marker_handling = custom_marker_handling;
+}
+EditControl.prototype = new GControl();
+
+EditControl.prototype.getDefaultPosition = function () {
+  return new GControlPosition(G_ANCHOR_TOP_LEFT, new GSize(100, 3));
+};
+
+EditControl.prototype.initialize = function (map) {
+  var container, control, polyButton, posButton;
+
+  container = jQuery('<div class="edit-toolbar"></div>').appendTo(map.getContainer()).get(0);
+  if (this.position) {
+    posButton = jQuery('<a class="button"><img src="http://www.google.com/mapfiles/marker.png"></img></a>').appendTo(container);
+    posButton.click(function() {
+      control.stopPolygonEdit();
+    });
+  }
+  if (this.polygon) {
+    polyButton = jQuery('<a class="button"><img src="http://www.google.com/mapfiles/markerZ.png"></img></a>').appendTo(container);
+    polyButton.click(function() {
+      control.startPolygonEdit();
+    });
+  }
+
+  control = this;
+  this.container = container;
+  return container;
+};
+
 if (google && google.load) {
   google.load('maps', '2.x');
 
   jQuery(document).ready(function () {
 
     var has_position, has_area, placeholder, map, aCoords, pCoords, position, icon, resetDesc, resetButton, resetBox,
-    marker, lookup, color, polygon, polygon_default, i,
+    marker, lookup, edit, color, polygon, polygon_default, i,
     //Creates a LatLng object from a coordinate string
     wkt_to_latlng = function (wkt) {
       var coords = wkt.split(' ');
@@ -132,8 +165,6 @@ if (google && google.load) {
       color = "#ff0000";
       polygon = new GPolygon([], color, 2, 0.7, color, 0.2);
       map.addOverlay(polygon);
-      polygon.enableDrawing();
-      polygon.enableEditing({onEvent: "mouseover"});
 
       //Add existing vertexes to the polygon. Adding them before
       //drawing and editing is enabled results in strange behaviour
@@ -153,5 +184,15 @@ if (google && google.load) {
         jQuery('#edit-simple-geo-area').attr('value', cArray.join(','));
       });
     }
+
+    edit = new EditControl(has_position, has_area, true);
+    edit.startPolygonEdit = function () {
+      polygon.enableDrawing();
+      polygon.enableEditing({onEvent: "mouseover"});
+    };
+    edit.endPolygonEdit = function () {
+      polygon.disableEditing();
+    };
+    map.addControl(edit);
   });
 }
