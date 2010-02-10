@@ -1,8 +1,56 @@
-#micro-map-widget .address-search, #micro-map-widget .edit-toolbar {
+#micro-map-widget .address-search, #simple_geo_form .address-search, #simple_geo_form .edit-toolbar {
+  background-color: rgba(255, 255, 255, 0.7) !important;
   background-color: #fff;
-  border: 1px solid #000;
-  padding: 2px;
+  padding: 4px;
 }
+
+#simple_geo_form .edit-toolbar .button {
+  display: block;
+  float: left;
+  margin-left: 3px;
+  width: 24px;
+  height: 24px;
+  overflow: hidden;
+  text-indent: -999px;
+  cursor: pointer;
+}
+
+#simple_geo_form .edit-toolbar .spacer {
+  display: block;
+  float: left;
+  width: 5px;
+  overflow: hidden;
+}
+
+#simple_geo_form .edit-toolbar .button:first-child {
+  margin-left: 0;
+}
+
+#simple_geo_form .edit-toolbar .area {
+  background-image: url(area_inactive.png);
+}
+
+#simple_geo_form .edit-toolbar .remove_area {
+  background-image: url(area_delete.png);
+}
+
+#simple_geo_form .area-active .area {
+  background-image: url(area_active.png);
+}
+
+#simple_geo_form .edit-toolbar .position {
+  background-image: url(marker_inactive.png);
+}
+
+#simple_geo_form .edit-toolbar .remove_position {
+  background-image: url(marker_delete.png);
+}
+
+#simple_geo_form .position-active .position {
+  background-image: url(marker_active.png);
+}
+
+
 
 #micro-map-widget {
   height: 200px;

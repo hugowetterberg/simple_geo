@@ -13,7 +13,7 @@ if (google && google.load) {
     LookupControl.prototype = new GControl();
 
     LookupControl.prototype.getDefaultPosition = function () {
-      return new GControlPosition(G_ANCHOR_TOP_RIGHT, new GSize(3, 3));
+      return new GControlPosition(G_ANCHOR_TOP_RIGHT, new GSize(0, 0));
     };
 
     LookupControl.prototype.initialize = function (map) {

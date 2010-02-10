@@ -2,33 +2,56 @@
 
 /*global google, jQuery, Drupal, GSmallMapControl, GIcon, G_DEFAULT_ICON, GSize, GPoint, GMarker, LookupControl, GEvent, GPolygon */
 
-function EditControl(position, polygon, custom_marker_handling) {
-  this.position = position;
-  this.polygon = polygon;
+function EditControl(default_edit_mode, custom_marker_handling) {
+  this.default_edit_mode = default_edit_mode;
   this.custom_marker_handling = custom_marker_handling;
 }
 EditControl.prototype = new GControl();
 
 EditControl.prototype.getDefaultPosition = function () {
-  return new GControlPosition(G_ANCHOR_TOP_LEFT, new GSize(100, 3));
+  return new GControlPosition(G_ANCHOR_TOP_LEFT, new GSize(60, 0));
 };
 
-EditControl.prototype.initialize = function (map) {
-  var container, control, polyButton, posButton;
+EditControl.prototype.initialize = function (map, posCallback, polyCallback) {
+  var container, control, last_deactivate_callback, last_button;
 
   container = jQuery('<div class="edit-toolbar"></div>').appendTo(map.getContainer()).get(0);
-  if (this.position) {
-    posButton = jQuery('<a class="button"><img src="http://www.google.com/mapfiles/marker.png"></img></a>').appendTo(container);
-    posButton.click(function() {
-      control.stopPolygonEdit();
-    });
-  }
-  if (this.polygon) {
-    polyButton = jQuery('<a class="button"><img src="http://www.google.com/mapfiles/markerZ.png"></img></a>').appendTo(container);
-    polyButton.click(function() {
-      control.startPolygonEdit();
-    });
-  }
+
+  this.addButton = function (name, title, callback, deactivate_callback) {
+    var button, activate_callback;
+
+    if (!name) {
+      jQuery('<div class="spacer">&nbsp;</div>').appendTo(container);
+    }
+    else {
+      button = jQuery('<a class="button ' + name + '" title="' + title + '">' + title + '</a>').appendTo(container);
+      activate_callback = function(){
+          var activate = true;
+
+          if (last_deactivate_callback) {
+            activate = last_deactivate_callback();
+          }
+          if (activate) {
+            jQuery(container)
+              .removeClass(last_button + '-active');
+          }
+
+          if (activate && callback) {
+            activate = callback();
+          }
+          if (activate) {
+            jQuery(container)
+              .addClass(name + '-active');
+            last_deactivate_callback = deactivate_callback;
+            last_button = name;
+          }
+        };
+      if (this.default_edit_mode == name) {
+        activate_callback();
+      }
+      button.click(activate_callback);
+    }
+  };
 
   control = this;
   this.container = container;
@@ -41,7 +64,7 @@ if (google && google.load) {
   jQuery(document).ready(function () {
 
     var has_position, has_area, placeholder, map, aCoords, pCoords, position, icon, resetDesc, resetButton, resetBox,
-    marker, lookup, edit, color, polygon, polygon_default, i,
+    marker, lookup, edit, color, polygon, polygon_default, i, edit_mode = 'position', no_position = false,
     //Creates a LatLng object from a coordinate string
     wkt_to_latlng = function (wkt) {
       var coords = wkt.split(' ');
@@ -69,12 +92,86 @@ if (google && google.load) {
     wkt_coord = function (ll) {
       return ll.lat() + ' ' + ll.lng();
     },
-    default_position = function () {
+    default_position = function (fallback) {
       var def = wkt_to_latlng(Drupal.settings.simple_geo_default_position ? Drupal.settings.simple_geo_default_position : '');
-      if (!def) {
+      if (!def && fallback) {
         def = new google.maps.LatLng(55.675455, 12.59119);
       }
       return def;
+    },
+    editable_polygon = function(poly) {
+      var new_poly, i, vert_count, polygon_default, vert = [];
+
+      if (poly) {
+        poly.hide();
+        vert_count = poly.getVertexCount();
+        for (i=0; i<vert_count; i++) {
+          vert.push(poly.getVertex(i));
+        }
+      }
+      else {
+        //Add existing vertexes.
+        vert = polygon_wkt_to_latlng(aCoords);
+        console.log(vert);
+        vert_count = vert.length;
+      }
+
+      //Create the polygon and set it up so that the user can edit it
+      color = "#ff0000";
+      new_poly = new GPolygon([], color, 2, 0.7, color, 0.2);
+      map.addOverlay(new_poly);
+      if (vert_count == 0) {
+        new_poly.enableDrawing();
+      }
+      new_poly.enableEditing({onEvent: "mouseover"});
+
+      for (i=0; i<vert_count; i++) {
+        new_poly.insertVertex(i, vert[i]);
+      }
+
+      //Update the area textarea when the polygon is updated
+      //TODO: This should be done on form submit, as it's slightly
+      //more expensive than it's position counterpart.
+      GEvent.addListener(new_poly, "lineupdated", function () {
+        var vCount = this.getVertexCount(), cArray = [], i;
+        for (i = 0; i < vCount; i += 1) {
+          cArray.push(wkt_coord(this.getVertex(i)));
+        }
+        jQuery('#edit-simple-geo-area').attr('value', cArray.join(','));
+      });
+
+      if (poly) {
+        poly.remove();
+      }
+      return new_poly;
+    },
+    non_editable_polygon = function(poly) {
+      var new_poly, i, vert_count, vert = [];
+      poly.hide();
+      vert_count = poly.getVertexCount();
+
+      if (vert_count > 0) {
+        for (i=0; i<vert_count; i++) {
+          vert.push(poly.getVertex(i));
+        }
+
+        new_poly = new GPolygon(vert, color, 2, 0.7, color, 0.2, {clickable: false});
+        map.addOverlay(new_poly);
+      }
+
+      poly.remove();
+      return new_poly;
+    },
+    marker_set_position = function(latlng) {
+      if (latlng) {
+        marker.setLatLng(latlng);
+      }
+      marker.show();
+      jQuery('#edit-simple-geo-position-wrapper input[type=text]').val(wkt_coord(marker.getLatLng()));
+    },
+    marker_remove = function() {
+      marker.hide();
+      jQuery('#edit-simple-geo-position-wrapper input[type=text]').val('');
     };
 
     has_position = jQuery('#edit-simple-geo-position-wrapper').hide().length;
@@ -90,12 +187,12 @@ if (google && google.load) {
     pCoords = jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value');
 
     //Center the map on the position if we have one
-    position = default_position();
     if (pCoords) {
       position = wkt_to_latlng(pCoords);
     }
     if (!position) {
-      position = default_position();
+      no_position = true;
+      position = default_position(true);
     }
     map.setCenter(position, Number(Drupal.settings.simple_geo_min_zoom));
 
@@ -109,29 +206,31 @@ if (google && google.load) {
     }
 
     resetBox = jQuery('<div class="reset-position"></div>');
-    resetButton = Drupal.t('Remove position');
-    resetDesc = Drupal.t('Resets the marker to default position');
     marker = new GMarker(position, {draggable: true, icon: icon});
-    jQuery('<a class="form-button" href="#" title="' + resetDesc + '"><span>' + resetButton + '</span></a>').appendTo(resetBox).click(function () {
-      var def = default_position();
-      marker.setLatLng(def);
-      map.setCenter(def, Number(Drupal.settings.simple_geo_min_zoom));
-      jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value', '');
-      return false;
-    }).after('<span class="description">' + resetDesc + '</span>');
+    //Add the marker to the map
+    if (has_position) {
+      map.addOverlay(marker);
+    }
+    if (no_position) {
+      marker_remove();
+    }
 
     lookup = new LookupControl(true);
     map.addControl(lookup);
     jQuery(lookup.container).bind('positioned', function (evt, coord) {
-      marker.setLatLng(coord);
+      marker_set_position(coord);
       map.setCenter(coord, Number(Drupal.settings.simple_geo_max_zoom));
-      jQuery('#edit-simple-geo-position-wrapper input[type=text]').val(wkt_coord(coord));
     });
-    resetBox.insertAfter(placeholder);
 
     //Update the position text-field on drag end
     GEvent.addListener(marker, "dragend", function () {
-      jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value', wkt_coord(this.getLatLng()));
+      marker_set_position();
+    });
+
+    GEvent.addListener(map, "click", function(overlay, latlng) {
+      if (edit_mode == 'position') {
+        marker_set_position(latlng);
+      }
     });
 
     //Listen for node loaded events to get default positions (used for group based position for nodes)
@@ -147,52 +246,48 @@ if (google && google.load) {
             if (res && res.simple_geo_position) {
               var position = wkt_to_latlng(res.simple_geo_position);
               map.setCenter(position, Number(Drupal.settings.simple_geo_max_zoom));
-              marker.setLatLng(position);
-              jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value', res.simple_geo_position);
+              marker_set_position(position);
             }
           }
         );
       }
     });
 
-    //Add the marker to the map
+    edit = new EditControl(edit_mode, true);
+    map.addControl(edit);
     if (has_position) {
-      map.addOverlay(marker);
-    }
-
-    if (has_area) {
-      //Create the polygon and set it up so that the user can edit it
-      color = "#ff0000";
-      polygon = new GPolygon([], color, 2, 0.7, color, 0.2);
-      map.addOverlay(polygon);
-
-      //Add existing vertexes to the polygon. Adding them before
-      //drawing and editing is enabled results in strange behaviour
-      polygon_default = polygon_wkt_to_latlng(aCoords);
-      for (i = 0; i < polygon_default.length; i += 1) {
-        polygon.insertVertex(i, polygon_default[i]);
-      }
-
-      //Update the area textarea when the polygon is updated
-      //TODO: This should be done on form submit, as it's slightly
-      //more expensive than it's position counterpart.
-      GEvent.addListener(polygon, "lineupdated", function () {
-        var vCount = this.getVertexCount(), cArray = [], i;
-        for (i = 0; i < vCount; i += 1) {
-          cArray.push(wkt_coord(this.getVertex(i)));
-        }
-        jQuery('#edit-simple-geo-area').attr('value', cArray.join(','));
+      edit.addButton('position', Drupal.t('Position'), function () {
+        edit_mode = 'position';
+        return true;
       });
     }
-
-    edit = new EditControl(has_position, has_area, true);
-    edit.startPolygonEdit = function () {
-      polygon.enableDrawing();
-      polygon.enableEditing({onEvent: "mouseover"});
-    };
-    edit.endPolygonEdit = function () {
-      polygon.disableEditing();
-    };
-    map.addControl(edit);
+    if (has_area) {
+      edit.addButton('area', Drupal.t('Area'), function () {
+        polygon = editable_polygon(polygon);
+        edit_mode = 'area';
+        return true;
+      }, function() {
+        polygon = non_editable_polygon(polygon);
+        return true;
+      });
+    }
+    edit.addButton();
+    if (has_position) {
+      edit.addButton('remove_position', Drupal.t('Remove position'), function () {
+        edit_mode = '';
+        marker_remove();
+        no_position = true;
+        return false;
+      });
+    }
+    if (has_area) {
+      edit.addButton('remove_area', Drupal.t('Remove area'), function () {
+        edit_mode = '';
+        polygon.remove();
+        polygon = null;
+        jQuery('#edit-simple-geo-area').attr('value', '');
+        return false;
+      });
+    }
   });
 }

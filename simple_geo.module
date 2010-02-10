@@ -40,7 +40,6 @@ function simple_geo_load() {
     if (!empty($gc_suffix)) {
       $settings['simple_geo_geocoding_suffix'] = $gc_suffix;
     }
-
     $settings['simple_geo_micromap_parent'] = variable_get('simple_geo_micromap_parent', '#main-inner');
     $settings['simple_geo_micromap_add_mode'] = variable_get('simple_geo_micromap_add_mode', 'prepend');
 
@@ -290,7 +289,7 @@ function simple_geo_add_form_js($form) {
   simple_geo_load();
   drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/LookupControl.js', 'module', 'header');
   drupal_add_js(drupal_get_path('module', 'simple_geo') .'/js/edit.js', 'module', 'header');
-  theme('simple_geo_form_css');
+  drupal_add_css(drupal_get_path('module', 'simple_geo') .'/css/simple_geo.css');
   return $form;
 }
 
