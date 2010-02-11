@@ -1,4 +1,4 @@
-// $Id$
+// $Id: micromap.js,v 1.2 2010/02/11 08:47:58 hugowetterberg Exp $
 
 /*global google, jQuery, Drupal, GSmallMapControl, GIcon, G_DEFAULT_ICON, GSize, GPoint, LookupControl, GLatLngBounds, GLatLng, GEvent */
 

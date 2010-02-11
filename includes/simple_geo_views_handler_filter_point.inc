@@ -1,5 +1,5 @@
 <?php
-// $Id: views_handler_filter_boolean_operator.inc,v 1.4 2009/06/01 21:41:31 merlinofchaos Exp $
+// $Id: simple_geo_views_handler_filter_point.inc,v 1.1 2010/02/11 08:47:58 hugowetterberg Exp $
 /**
  * Simple filter to handle matching of boolean values
  *

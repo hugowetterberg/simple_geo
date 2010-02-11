@@ -1,4 +1,4 @@
-; $Id$
+; $Id: simple_geo.info,v 1.2 2010/02/11 08:47:58 hugowetterberg Exp $
 name = Simple Geo
 version = "6.x-0.x-dev"
 core = "6.x"

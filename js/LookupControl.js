@@ -1,4 +1,4 @@
-// $Id$
+// $Id: LookupControl.js,v 1.2 2010/02/11 08:47:58 hugowetterberg Exp $
 
 /*global google, Drupal, jQuery, GControl, GControlPosition, G_ANCHOR_TOP_RIGHT, GSize, GIcon, G_DEFAULT_ICON, GPoint, GClientGeocoder */
 

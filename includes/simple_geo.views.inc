@@ -1,5 +1,5 @@
 <?php
-// $Id: simplenews.views.inc,v 1.1.2.4 2009/01/02 11:59:34 sutharsan Exp $
+// $Id: simple_geo.views.inc,v 1.1 2010/02/11 08:47:58 hugowetterberg Exp $
 
 /**
  * @file

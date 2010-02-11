@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: simple_geo_views_handler_field_point.inc,v 1.2 2010/02/11 08:47:58 hugowetterberg Exp $
 
 /**
  * @file
