@@ -4,7 +4,7 @@
   padding: 4px;
 }
 
-#simple_geo_form .edit-toolbar .button {
+#simple_geo_form .edit-toolbar .sg-button {
   display: block;
   float: left;
   margin-left: 3px;
@@ -22,7 +22,7 @@
   overflow: hidden;
 }
 
-#simple_geo_form .edit-toolbar .button:first-child {
+#simple_geo_form .edit-toolbar .sg-button:first-child {
   margin-left: 0;
 }
 

@@ -24,7 +24,7 @@ EditControl.prototype.initialize = function (map, posCallback, polyCallback) {
       jQuery('<div class="spacer">&nbsp;</div>').appendTo(container);
     }
     else {
-      button = jQuery('<a class="button ' + name + '" title="' + title + '">' + title + '</a>').appendTo(container);
+      button = jQuery('<a class="sg-button ' + name + '" title="' + title + '">' + title + '</a>').appendTo(container);
       activate_callback = function(){
           var activate = true;
 
