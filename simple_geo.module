@@ -452,6 +452,43 @@ function simple_geo_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
 }
 
 /**
+ * Envelop a coordinate in a circle.
+ *
+ * @param string $lat
+ *  Latitude.
+ * @param string $lon
+ *  Longitude.
+ * @param float|int $radius
+ *  Radius in km.
+ * @param int $steps
+ *  Optional. The number of vertexes in the circle. Defaults to 8.
+ * @param bool $close
+ *  Optional. Whether to close the circle. Defaults to FALSE.
+ * @return array
+ */
+function simple_geo_circle($lat, $lon, $radius, $steps=8, $close=FALSE) {
+  $R = 6371; // The radius of earth (in kilometers)
+
+  $delta_lon = rad2deg($radius/$R/cos(deg2rad($lat)));
+  $delta_lat = rad2deg($radius/$R);
+
+  $pts = array();
+  $step = pi() / ($steps / 2);
+  if ($close) {
+    $steps++;
+  }
+
+  for ($i = 0; $i < $steps; $i++) {
+    $rad = $step * $i;
+    $pts[] = array(
+      $lat + $delta_lat * cos($rad),
+      $lon + $delta_lon * sin($rad),
+    );
+  }
+  return $pts;
+}
+
+/**
  * Gets the position of a object.
  *
  * @param int $nid The id of the node
