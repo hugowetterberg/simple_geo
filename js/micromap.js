@@ -1,6 +1,6 @@
 // $Id$
 
-/*global google, jQuery, Drupal, GSmallMapControl, GIcon, G_DEFAULT_ICON, GSize, GPoint, LookupControl, GLatLngBounds, GLatLng, GEvent */
+/*global google, jQuery, Drupal, LookupControl */
 
 if (google && google.load) {
   google.load('maps', '2.x');
@@ -35,13 +35,13 @@ if (google && google.load) {
       }
 
       map = new google.maps.Map2(placeholder);
-      map.addControl(new GSmallMapControl());
+      map.addControl(new google.maps.SmallMapControl());
 
-      icon = new GIcon(G_DEFAULT_ICON);
+      icon = new google.maps.Icon(google.maps.DEFAULT_ICON);
       if (Drupal.settings.user_map) {
         icon.shadow = null;
-        icon.iconSize = new GSize(20, 29);
-        icon.iconAnchor = new GPoint(9, 29);
+        icon.iconSize = new google.maps.Size(20, 29);
+        icon.iconAnchor = new google.maps.Point(9, 29);
         icon.image = Drupal.settings.user_map.favicon_path + '/default/0/marker.png';
       }
 
@@ -50,20 +50,20 @@ if (google && google.load) {
       }
 
       tmp_ids = 0;
-      bounds = new GLatLngBounds();
+      bounds = new google.maps.LatLngBounds();
       pos_len = positions.length;
       for (i = 0; i < pos_len; i += 1) {
         lat = jQuery(positions.get(i)).find('.latitude').text();
         lng = jQuery(positions.get(i)).find('.longitude').text();
 
-        pos = new GLatLng(lat, lng);
+        pos = new google.maps.LatLng(lat, lng);
         marker = new google.maps.Marker(pos, {'icon' : icon});
         if (i === 0) {
           map.setCenter(pos);
         }
 
         map.addOverlay(marker);
-        GEvent.addListener(marker, "click", function (geo, marker) {
+        google.maps.Event.addListener(marker, "click", function (geo, marker) {
           return function () {
             var level = geo, has_title, title;
             while (!(has_title = (title = jQuery(level).children('.simple-geo-title,.title,.views-field-title')).length) && level.parentNode) {
@@ -148,10 +148,10 @@ if (google && google.load) {
       info_window.hide();
       info_window_content = $('#micro-map-info-content');
       $('<a class="close_link">' + Drupal.t('Close') + '</a>').appendTo(info_window).click(function(){info_window.hide();});
-      GEvent.addListener(map, "movestart", function(){
+      google.maps.Event.addListener(map, "movestart", function(){
         info_window.hide();
       });
-      GEvent.addListener(map, "click", function(){
+      google.maps.Event.addListener(map, "click", function(){
         info_window.hide();
       });
     }

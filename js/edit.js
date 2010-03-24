@@ -1,67 +1,62 @@
 // $Id$
 
-/*global google, jQuery, Drupal, GSmallMapControl, GIcon, G_DEFAULT_ICON, GSize, GPoint, GMarker, LookupControl, GEvent, GPolygon */
-
-function EditControl(default_edit_mode, custom_marker_handling) {
-  this.default_edit_mode = default_edit_mode;
-  this.custom_marker_handling = custom_marker_handling;
-}
-EditControl.prototype = new GControl();
-
-EditControl.prototype.getDefaultPosition = function () {
-  return new GControlPosition(G_ANCHOR_TOP_LEFT, new GSize(60, 0));
-};
-
-EditControl.prototype.initialize = function (map, posCallback, polyCallback) {
-  var container, control, last_deactivate_callback, last_button;
-
-  container = jQuery('<div class="edit-toolbar"></div>').appendTo(map.getContainer()).get(0);
-
-  this.addButton = function (name, title, callback, deactivate_callback) {
-    var button, activate_callback;
-
-    if (!name) {
-      jQuery('<div class="spacer">&nbsp;</div>').appendTo(container);
-    }
-    else {
-      button = jQuery('<a class="sg-button ' + name + '" title="' + title + '">' + title + '</a>').appendTo(container);
-      activate_callback = function(){
-          var activate = true;
-
-          if (last_deactivate_callback) {
-            activate = last_deactivate_callback();
-          }
-          if (activate) {
-            jQuery(container)
-              .removeClass(last_button + '-active');
-          }
-
-          if (activate && callback) {
-            activate = callback();
-          }
-          if (activate) {
-            jQuery(container)
-              .addClass(name + '-active');
-            last_deactivate_callback = deactivate_callback;
-            last_button = name;
-          }
-        };
-      if (this.default_edit_mode == name) {
-        activate_callback();
-      }
-      button.click(activate_callback);
-    }
-  };
-
-  control = this;
-  this.container = container;
-  return container;
-};
+/*global google, jQuery, Drupal, LookupControl */
 
 if (google && google.load) {
-  google.load('maps', '2.x');
-
   jQuery(document).ready(function () {
+    var EditControl = function(default_edit_mode, custom_marker_handling) {
+      this.default_edit_mode = default_edit_mode;
+      this.custom_marker_handling = custom_marker_handling;
+    };
+    EditControl.prototype = new google.maps.Control();
+    EditControl.prototype.getDefaultPosition = function () {
+      return new google.maps.ControlPosition(google.maps.ANCHOR_TOP_LEFT, new google.maps.Size(60, 0));
+    };
+    EditControl.prototype.initialize = function (map, posCallback, polyCallback) {
+      var container, control, last_deactivate_callback, last_button;
+
+      container = jQuery('<div class="edit-toolbar"></div>').appendTo(map.getContainer()).get(0);
+
+      this.addButton = function (name, title, callback, deactivate_callback) {
+        var button, activate_callback;
+
+        if (!name) {
+          jQuery('<div class="spacer">&nbsp;</div>').appendTo(container);
+        }
+        else {
+          button = jQuery('<a class="sg-button ' + name + '" title="' + title + '">' + title + '</a>').appendTo(container);
+          activate_callback = function(){
+              var activate = true;
+
+              if (last_deactivate_callback) {
+                activate = last_deactivate_callback();
+              }
+              if (activate) {
+                jQuery(container)
+                  .removeClass(last_button + '-active');
+              }
+
+              if (activate && callback) {
+                activate = callback();
+              }
+              if (activate) {
+                jQuery(container)
+                  .addClass(name + '-active');
+                last_deactivate_callback = deactivate_callback;
+                last_button = name;
+              }
+            };
+          if (this.default_edit_mode == name) {
+            activate_callback();
+          }
+          button.click(activate_callback);
+        }
+      };
+
+      control = this;
+      this.container = container;
+      return container;
+    };
 
     var has_position, has_area, placeholder, map, aCoords, pCoords, position, icon, resetDesc, resetButton, resetBox,
     marker, lookup, edit, color, polygon, polygon_default, i, edit_mode = 'position', no_position = false,
@@ -118,7 +113,7 @@ if (google && google.load) {
 
       //Create the polygon and set it up so that the user can edit it
       color = "#ff0000";
-      new_poly = new GPolygon([], color, 2, 0.7, color, 0.2);
+      new_poly = new google.maps.Polygon([], color, 2, 0.7, color, 0.2);
       map.addOverlay(new_poly);
       if (vert_count == 0) {
         new_poly.enableDrawing();
@@ -132,7 +127,7 @@ if (google && google.load) {
       //Update the area textarea when the polygon is updated
       //TODO: This should be done on form submit, as it's slightly
       //more expensive than it's position counterpart.
-      GEvent.addListener(new_poly, "lineupdated", function () {
+      google.maps.Event.addListener(new_poly, "lineupdated", function () {
         var vCount = this.getVertexCount(), cArray = [], i;
         for (i = 0; i < vCount; i += 1) {
           cArray.push(wkt_coord(this.getVertex(i)));
@@ -155,7 +150,7 @@ if (google && google.load) {
           vert.push(poly.getVertex(i));
         }
 
-        new_poly = new GPolygon(vert, color, 2, 0.7, color, 0.2, {clickable: false});
+        new_poly = new google.maps.Polygon(vert, color, 2, 0.7, color, 0.2, {clickable: false});
         map.addOverlay(new_poly);
       }
 
@@ -180,7 +175,7 @@ if (google && google.load) {
     //Create map view
     placeholder = jQuery('.map-placeholder:first').css({'width': '100%', 'height': '400px'}).get(0);
     map = new google.maps.Map2(placeholder);
-    map.addControl(new GSmallMapControl());
+    map.addControl(new google.maps.SmallMapControl());
 
     //Get coordinate data
     aCoords = jQuery('#edit-simple-geo-area').attr('value');
@@ -198,15 +193,15 @@ if (google && google.load) {
 
     //Create our marker and make it draggable
     if (Drupal.settings.user_map) {
-      icon = new GIcon(G_DEFAULT_ICON);
+      icon = new google.maps.Icon(google.maps.DEFAULT_ICON);
       icon.shadow = null;
-      icon.iconSize = new GSize(20, 29);
-      icon.iconAnchor = new GPoint(9, 29);
+      icon.iconSize = new google.maps.Size(20, 29);
+      icon.iconAnchor = new google.maps.Point(9, 29);
       icon.image = Drupal.settings.user_map.favicon_path + '/default/0/marker.png';
     }
 
     resetBox = jQuery('<div class="reset-position"></div>');
-    marker = new GMarker(position, {draggable: true, icon: icon});
+    marker = new google.maps.Marker(position, {draggable: true, icon: icon});
     //Add the marker to the map
     if (has_position) {
       map.addOverlay(marker);
@@ -223,11 +218,11 @@ if (google && google.load) {
     });
 
     //Update the position text-field on drag end
-    GEvent.addListener(marker, "dragend", function () {
+    google.maps.Event.addListener(marker, "dragend", function () {
       marker_set_position();
     });
 
-    GEvent.addListener(map, "click", function(overlay, latlng) {
+    google.maps.Event.addListener(map, "click", function(overlay, latlng) {
       if (edit_mode == 'position') {
         marker_set_position(latlng);
       }

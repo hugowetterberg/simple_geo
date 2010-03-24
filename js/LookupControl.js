@@ -1,6 +1,6 @@
 // $Id$
 
-/*global google, Drupal, jQuery, GControl, GControlPosition, G_ANCHOR_TOP_RIGHT, GSize, GIcon, G_DEFAULT_ICON, GPoint, GClientGeocoder */
+/*global google, Drupal, jQuery */
 
 function LookupControl(custom_marker_handling) {
   this.custom_marker_handling = custom_marker_handling;
@@ -10,26 +10,26 @@ if (google && google.load) {
   google.load('maps', '2.x');
 
   jQuery(document).ready(function () {
-    LookupControl.prototype = new GControl();
+    LookupControl.prototype = new google.maps.Control();
 
     LookupControl.prototype.getDefaultPosition = function () {
-      return new GControlPosition(G_ANCHOR_TOP_RIGHT, new GSize(0, 0));
+      return new google.maps.ControlPosition(google.maps.ANCHOR_TOP_RIGHT, new google.maps.Size(0, 0));
     };
 
     LookupControl.prototype.initialize = function (map) {
       var lookup_icon, container, address_input, address_lookup, geocoder, lookup_marker, lookup_string, control, lookup, $fields, lookupOnEnter;
 
-      lookup_icon = new GIcon(G_DEFAULT_ICON);
+      lookup_icon = new google.maps.Icon(google.maps.DEFAULT_ICON);
       lookup_icon.image = 'http://maps.google.com/mapfiles/arrow.png';
-      lookup_icon.iconSize = new GSize(39, 34);
-      lookup_icon.iconAnchor = new GPoint(11, 33);
+      lookup_icon.iconSize = new google.maps.Size(39, 34);
+      lookup_icon.iconAnchor = new google.maps.Point(11, 33);
 
       container = jQuery('<div class="address-search"><label for="edit-simple-geo-address-search">' + Drupal.t('Search for address') +
         ': </label><input id="edit-simple-geo-address-search" /></div>').appendTo(map.getContainer()).get(0);
       address_input = jQuery('#edit-simple-geo-address-search');
       address_lookup = jQuery('<input type="button" />').attr('value', Drupal.t('Search')).insertAfter(address_input).wrap('<span class="form-button"></span>');
 
-      geocoder = new GClientGeocoder();
+      geocoder = new google.maps.ClientGeocoder();
       lookup_string = false;
       control = this;
       lookup = function () {
