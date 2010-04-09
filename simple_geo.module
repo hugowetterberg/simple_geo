@@ -12,7 +12,7 @@ define('SIMPLE_GEO_COORDINATE_SEPARATOR', ' ');
 require('includes/simple_geo_themeable_functions.php');
 
 function simple_geo_init() {
-  if (variable_get('simple_geo_manually_load', 0)) {
+  if (variable_get('simple_geo_manually_load', 1)) {
     simple_geo_load();
   }
 }
@@ -28,18 +28,21 @@ function simple_geo_load() {
     if ($def_pos) {
       $settings['simple_geo_default_position'] = $def_pos;
     }
-    $min_zoom = variable_get('simple_geo_min_zoom', 1);
-    $max_zoom = variable_get('simple_geo_max_zoom', 14);
-    $search_address = variable_get('simple_geo_search_address', 1);
-    $search_address_icon = variable_get('simple_geo_search_address_icon', 1);
-    $settings['simple_geo_search_address'] = $search_address;
-    $settings['simple_geo_search_address_icon'] = $search_address_icon;
-    $settings['simple_geo_min_zoom'] = $min_zoom;
-    $settings['simple_geo_max_zoom'] = $max_zoom;
+
+    $settings['simple_geo_search_address']      = variable_get('simple_geo_search_address', 1);
+    $settings['simple_geo_search_address_icon'] = variable_get('simple_geo_search_address_icon', 1);
+    $settings['simple_geo_min_zoom']            = variable_get('simple_geo_min_zoom', 1);
+    $settings['simple_geo_max_zoom']            = variable_get('simple_geo_max_zoom', 14);
+    $settings['simple_geo_overview_map_show']   = variable_get('simple_geo_overview_map_show', 0);
+    $settings['simple_geo_overview_map_size']   = variable_get('simple_geo_overview_map_size', 150);
+    $settings['simple_geo_micromap_parent']     = variable_get('simple_geo_micromap_parent', '#main-inner');
+    $settings['simple_geo_micromap_add_mode']   = variable_get('simple_geo_micromap_add_mode', 'prepend');
+
     $gc_suffix = variable_get('simple_geo_geocoding_suffix', '');
     if (!empty($gc_suffix)) {
       $settings['simple_geo_geocoding_suffix'] = $gc_suffix;
     }
+
     $settings['simple_geo_micromap_parent'] = variable_get('simple_geo_micromap_parent', '#main-inner');
     $settings['simple_geo_micromap_add_mode'] = variable_get('simple_geo_micromap_add_mode', 'prepend');
 

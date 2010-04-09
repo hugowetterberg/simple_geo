@@ -177,6 +177,12 @@ if (google && google.load) {
     map = new google.maps.Map2(placeholder);
     map.addControl(new google.maps.SmallMapControl());
 
+    if (Drupal.settings.simple_geo_overview_map_show) {
+      var size = Drupal.settings.simple_geo_overview_map_size;
+      var ovcontrol = new GOverviewMapControl(new GSize(size,size));
+      map.addControl(ovcontrol);
+    }
+
     //Get coordinate data
     aCoords = jQuery('#edit-simple-geo-area').attr('value');
     pCoords = jQuery('#edit-simple-geo-position-wrapper input[type=text]').attr('value');
@@ -201,7 +207,9 @@ if (google && google.load) {
     }
 
     resetBox = jQuery('<div class="reset-position"></div>');
+
     marker = new google.maps.Marker(position, {draggable: true, icon: icon});
+
     //Add the marker to the map
     if (has_position) {
       map.addOverlay(marker);

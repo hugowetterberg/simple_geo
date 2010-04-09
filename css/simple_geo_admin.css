@@ -1,0 +1,11 @@
+#edit-simple-geo-overview-map-size { width: 35px !important; }
+
+#edit-simple-geo-zoom-level { margin: 0 !important; }
+
+#edit-simple-geo-min-zoom-wrapper,
+#edit-simple-geo-max-zoom-wrapper {
+  width: 70px;
+  display: inline-block;
+  clear: none;
+  margin: 0 0 2px 0 !important;
+}
