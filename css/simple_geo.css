@@ -4,6 +4,11 @@
   padding: 4px;
 }
 
+#micro-map-widget,
+.map-placeholder {
+  overflow: hidden;
+}
+
 .map-placeholder .edit-toolbar .sg-button {
   display: block;
   float: left;

@@ -1,3 +1,7 @@
+.map-placeholder {
+  overflow: hidden;
+}
+
 #edit-simple-geo-overview-map-size { width: 35px !important; }
 
 #edit-simple-geo-zoom-level { margin: 0 !important; }
