@@ -16,6 +16,9 @@
 function simple_geo_install() {
   drupal_install_schema('simple_geo');
 
+  db_query("ALTER TABLE {simple_geo_area} ENGINE=MyISAM");
+  db_query("ALTER TABLE {simple_geo_position} ENGINE=MyISAM");
+
   db_query("ALTER TABLE {simple_geo_area}
     ADD COLUMN area POLYGON NOT NULL,
     ADD SPATIAL INDEX area_index(area)");
